@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent" 
+    android:clickable="true"
+    >
+
+    <ImageView
+        android:id="@+id/imageView_cover_item"
+        android:layout_width="250dp"
+        android:layout_height="fill_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/rumba" />
+
+    <ImageView
+        android:id="@+id/imageView_cover_item_transparency"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignBottom="@+id/imageView_cover_item"
+        android:layout_alignLeft="@+id/imageView_cover_item"
+        android:layout_alignRight="@+id/imageView_cover_item"
+        android:layout_alignTop="@+id/imageView_cover_item"
+        android:scaleType="fitXY"
+        android:src="@drawable/opacity" />
+
+    <TextView
+        android:id="@+id/textView_cover_itemt_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="Cover Titel"
+        android:textColor="@color/white"
+        android:textSize="@dimen/cover_item_title_size" />
+
+</RelativeLayout>

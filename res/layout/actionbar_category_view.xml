@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black" >
+
+    <ImageView
+        android:id="@+id/imageView_actionBar_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_weight="0.98"
+        android:src="@drawable/ic_back_button"
+        android:clickable="true" />
+
+    <TextView
+        android:id="@+id/textView_actionBar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_weight="1"
+        android:text="Category Titel"
+        android:textAlignment="center"
+        android:textColor="@color/grey_title"
+        android:textSize="@dimen/cover_item_title_size" />
+
+    <ImageView
+        android:id="@+id/imageView_actionBar_play"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:padding="5dp"
+        android:src="@drawable/ic_now_playing" 
+        android:clickable="true"/>
+
+</LinearLayout>

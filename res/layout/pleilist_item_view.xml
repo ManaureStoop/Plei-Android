@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" 
+    android:clickable="true"
+    android:orientation="vertical"
+    >
+    
+        <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/plei_red" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <ImageView
+                android:id="@+id/imageView_pleilist_item"
+                android:layout_width="fill_parent"
+                android:layout_height="100dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/rumba" />
+
+            <ImageView
+                android:id="@+id/imageView_pleilist_item_transparency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageView_pleilist_item"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:scaleType="fitXY"
+                android:src="@drawable/opacity" />
+
+            <TextView
+                android:id="@+id/textView_pleilist_item_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="38dp"
+                android:text="Cover Titel"
+                android:textColor="@color/white"
+                android:textSize="@dimen/cover_item_title_size" />
+
+        </RelativeLayout>
+
+</LinearLayout>

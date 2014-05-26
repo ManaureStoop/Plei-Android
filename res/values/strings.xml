@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Plei</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings!</string>
+    
+    
+    
+    <string name="main_menu_destacados_title">DESTACADOS</string>
+    <string name="main_menu_planes_title">PLANES</string>
+    <string name="main_menu_generos_title">GENEROS</string>
+    <string name="main_menu_favoritos_title">FAVORITOS</string>
+
+</resources>
