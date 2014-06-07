@@ -538,5 +538,99 @@ public class PleilistProvider {
 
 		return null;
 	}
+	
+	public static ArrayList<Pleilist> getFavoritesPleiLists(Context context) {
+
+		if (context == null)
+			return null;
+
+		ArrayList<Pleilist> pleilists = new ArrayList<Pleilist>();
+
+		String condition = PleilistEntity.COLUMN_FAVORITE + " = " + "'"
+				+ Pleilist.FAVORITE + "'";
+
+		final Cursor cursor = context.getContentResolver().query(URI_PLEILIST,
+				null, condition, null, null);
+
+		Pleilist pleilist = null;
+
+		if (cursor.getCount() == 0) {
+			cursor.close();
+			return null;
+		}
+
+		try {
+			if (cursor.moveToFirst()) {
+
+				do {
+					final long id = cursor.getLong(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_ID));
+					final String system_id = cursor.getString(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_SYSTEM_ID));
+					final String name = cursor.getString(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_NAME));
+					final long updated_at = cursor.getInt(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_UPDATED_AT));
+					final String imageFile = cursor.getString(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_IMAGE));
+					final String coverImage = cursor.getString(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_COVER_IMAGE));
+					final String categoryId = cursor.getString(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_CATEGORY_ID));
+					final int order = cursor.getInt(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_CATEGORY_ORDER));
+					final int deleted = cursor.getInt(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_DELETED));
+					final int flaged = cursor.getInt(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_FLAGED));
+					final int favorite = cursor.getInt(cursor
+							.getColumnIndex(PleilistEntity.COLUMN_FAVORITE));
+
+					Calendar updatedAt = Calendar.getInstance();
+					updatedAt.setTimeInMillis(updated_at);
+
+					pleilist = new Pleilist();
+					pleilist.setId(id);
+					pleilist.setSystem_id(system_id);
+					pleilist.setName(name);
+
+					if (updatedAt != null) {
+						pleilist.setUpdated_at(updatedAt);
+					}
+					if (imageFile != null) {
+						pleilist.setImage(imageFile);
+					}
+					if (coverImage != null) {
+						pleilist.setCoverImage(coverImage);
+					}
+					if (categoryId != null) {
+						pleilist.setCategoryId(categoryId);
+					}
+					if (order != -1) {
+						pleilist.setOrder(order);
+					}
+					if (deleted != -1) {
+						pleilist.setDeleted(deleted);
+					}
+					if (flaged != -1) {
+						pleilist.setFlaged(flaged);
+					}	
+					if (favorite != -1) {
+						pleilist.setFavorite(favorite);
+					}
+
+					pleilists.add(pleilist);
+
+				} while (cursor.moveToNext());
+			}
+
+		} catch (Exception e) {
+			pleilists = null;
+			Log.e(LOG_TAG, "Error : " + e.getMessage());
+		} finally {
+			cursor.close();
+		}
+		return pleilists;
+	}
 
 }

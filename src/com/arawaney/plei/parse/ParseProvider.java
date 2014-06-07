@@ -11,9 +11,12 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.Log;
 
+import com.arawaney.plei.db.PleilistTrackEntity;
+import com.arawaney.plei.db.TrackEntity;
 import com.arawaney.plei.db.provider.CategoryProvider;
 import com.arawaney.plei.db.provider.CoverProvider;
 import com.arawaney.plei.db.provider.PleilistProvider;
+import com.arawaney.plei.db.provider.TrackProvider;
 import com.arawaney.plei.listener.ParseListener;
 import com.arawaney.plei.model.Category;
 import com.arawaney.plei.model.Cover;
@@ -21,6 +24,7 @@ import com.arawaney.plei.model.PelilistTrack;
 import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.GetDataCallback;
 import com.parse.LogInCallback;
 import com.parse.Parse;
@@ -28,7 +32,9 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseRelation;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 public class ParseProvider {
 	private static final String LOG_TAG = "Plei-ParseProvider";
@@ -56,6 +62,8 @@ public class ParseProvider {
 	private static final String COVER_CLASS = "Cover";
 	private static final String PLEILIST_CLASS = "Pleilist";
 	private static final String TRACK_CLASS = "Track";
+	
+	private static final String FAVORITE_TAG = "favorites";
 
 	private static final String UPDATED_AT_TAG = "updatedAt";
 
@@ -82,14 +90,13 @@ public class ParseProvider {
 	}
 
 	public static void initializeParse(final Context context) {
-//		new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-				Parse.initialize(context,
-						"X5n0LmTy7RSybqBP2QWmGoQDQNUqa82bXwee6Sx3",
-						"acnE1q6yEAQ24KMofj74rnOowvBN6TVqjKwomlcZ");
-//			}
-//		}).start();
+		// new Thread(new Runnable() {
+		// @Override
+		// public void run() {
+		Parse.initialize(context, "X5n0LmTy7RSybqBP2QWmGoQDQNUqa82bXwee6Sx3",
+				"acnE1q6yEAQ24KMofj74rnOowvBN6TVqjKwomlcZ");
+		// }
+		// }).start();
 
 	}
 
@@ -289,7 +296,7 @@ public class ParseProvider {
 
 					for (ParseObject object : cList) {
 						final Pleilist pleilist = readPleilistFromCursor(
-								object, listener);
+								object, listener, context);
 						pleilist.setSystem_id(object.getObjectId());
 						pleilists.add(pleilist);
 
@@ -349,7 +356,8 @@ public class ParseProvider {
 	}
 
 	protected static Pleilist readPleilistFromCursor(
-			ParseObject parsedPleilist, ParseListener listener) {
+			ParseObject parsedPleilist, ParseListener listener,
+			final Context context) {
 		final Pleilist pleilist = new Pleilist();
 
 		if (parsedPleilist.getString(NAME_TAG) != null) {
@@ -387,15 +395,32 @@ public class ParseProvider {
 
 		pleilist.setUpdated_at(updateCalendar);
 
+		ParseRelation<ParseObject> relation = parsedPleilist
+				.getRelation(TRACKS_TAG);
+		relation.getQuery().findInBackground(new FindCallback<ParseObject>() {
+			public void done(List<ParseObject> tracks, ParseException e) {
+				if (e != null) {
+					Log.d(LOG_TAG,
+							"No tracks found for pleilist : "
+									+ pleilist.getName());
+				} else {
+					for (ParseObject track : tracks) {
+						String trackId = track.getObjectId();
+						TrackProvider.insertPelilistTrack(context, trackId,
+								pleilist.getSystem_id());
+					}
+				}
+			}
+		});
+
 		return pleilist;
 	}
 
-	public static void updateTracks(Context context,
+	public static void updateTracks(final Context context,
 			final ParseListener listener) {
 		Date updateAt = PleilistProvider.getLastUpdate(context);
 
-		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
-				PLEILIST_CLASS);
+		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(TRACK_CLASS);
 		if (updateAt != null) {
 			query.whereGreaterThan(UPDATED_AT_TAG, updateAt);
 		}
@@ -408,7 +433,8 @@ public class ParseProvider {
 					ArrayList<Track> tracks = new ArrayList<Track>();
 
 					for (ParseObject object : cList) {
-						Track track = readTrackFromCursor(object, listener);
+						Track track = readTrackFromCursor(object, listener,
+								context);
 						track.setSystem_id(object.getObjectId());
 						tracks.add(track);
 					}
@@ -428,7 +454,7 @@ public class ParseProvider {
 	}
 
 	protected static Track readTrackFromCursor(ParseObject parsedTrack,
-			ParseListener listener) {
+			ParseListener listener, final Context context) {
 		final Track track = new Track();
 
 		if (parsedTrack.getString(NAME_TAG) != null) {
@@ -455,5 +481,154 @@ public class ParseProvider {
 
 		return track;
 	}
+
+	public static void insertFavoritePleilist(final Pleilist pleilist,
+			Context context, final ParseListener listener) {
+		final ParseUser currentUser = ParseUser.getCurrentUser();
+
+		if (currentUser == null) {
+			listener.onSavedFAvoriteDone(false, pleilist);
+		} else {
+
+			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+					PLEILIST_CLASS);
+			query.getInBackground(pleilist.getSystem_id(),
+					new GetCallback<ParseObject>() {
+						public void done(ParseObject parsedPleilist, ParseException e) {
+							if (e == null) {
+								ParseRelation<ParseObject> relation = currentUser.getRelation(FAVORITE_TAG);
+								relation.add(parsedPleilist);
+								currentUser
+										.saveInBackground(new SaveCallback() {
+
+											@Override
+											public void done(ParseException e) {
+												if (e == null) {
+													listener.onSavedFAvoriteDone(true, pleilist);
+												} else {
+													listener.onSavedFAvoriteDone(false, pleilist);
+												}
+
+											}
+										});
+							} else {
+								Log.d(LOG_TAG, "Pleilist :"+ pleilist.getSystem_id()+" not found!");
+							}
+						}
+					});
+
+		}
+
+	}
+
+	public static void updateFavorites(final Context context, final ParseListener listener) {
+		
+		final ParseUser currentUser = ParseUser.getCurrentUser();
+
+		if (currentUser == null) {
+			listener.onFavoritesUpdated(false);
+		} else {
+
+			
+			ParseRelation<ParseObject> relation = currentUser
+					.getRelation(FAVORITE_TAG);
+			relation.getQuery().findInBackground(new FindCallback<ParseObject>() {
+				public void done(List<ParseObject> parsedPleilists, ParseException e) {
+					if (e != null) {
+						Log.d(LOG_TAG,
+								"No favorites found for user : "
+										+ currentUser.getUsername());
+						listener.onFavoritesUpdated(false);
+					} else {
+						insertNewFavoriteds(context, parsedPleilists);
+						removeUnfavoritedPleilists(context, parsedPleilists);
+						listener.onFavoritesUpdated(true);
+						
+					}
+				}
+
+				private void insertNewFavoriteds(final Context context,
+						List<ParseObject> parsedPleilists) {
+					for (ParseObject parsedpleilist : parsedPleilists) {
+						String pleiListId = parsedpleilist.getObjectId();
+						Pleilist  pleilist = PleilistProvider.readPleilist(context, pleiListId);
+						if (pleilist!= null) {
+							if (pleilist.getFavorite() == Pleilist.NOT_FAVORITE) {
+								pleilist.setFavorite(Pleilist.FAVORITE);
+								PleilistProvider.updatePleilist(context, pleilist);
+							}
+						}
+						
+					}
+				}
+
+				private void removeUnfavoritedPleilists(final Context context,
+						List<ParseObject> parsedPleilists) {
+					ArrayList<Pleilist> favoritesPlailists = PleilistProvider.getFavoritesPleiLists(context);
+					boolean isNotFavorite = true;
+					for (Pleilist pleilist : favoritesPlailists) {
+						for (ParseObject parsedPleilist : parsedPleilists) {
+							if (pleilist.getSystem_id().equals(parsedPleilist.getObjectId())) {
+								isNotFavorite = false;
+							}
+						}
+						if (isNotFavorite) {
+							pleilist.setFavorite(Pleilist.NOT_FAVORITE);
+							PleilistProvider.updatePleilist(context, pleilist);
+						}
+						isNotFavorite = true;
+					}
+				}
+			});
+			
+		
+			
+		}
+		
+	}
+
+	public static void removeFavoritePleilist(final Context context, final ParseListener listener, final Pleilist pleilist) {
+		final ParseUser currentUser = ParseUser.getCurrentUser();
+
+		if (currentUser == null) {
+			listener.onFavoritedRemoved(false, pleilist);
+		}else {
+			final ParseRelation<ParseObject> relation = currentUser
+					.getRelation(FAVORITE_TAG);
+			relation.getQuery().findInBackground(new FindCallback<ParseObject>() {
+				public void done(List<ParseObject> parsedPleilists, ParseException e) {
+					if (e != null) {
+						Log.d(LOG_TAG,
+								"No favorites found for user : "
+										+ currentUser.getUsername());
+						listener.onFavoritedRemoved(false, pleilist);
+						
+					} else {
+						for (ParseObject parsedPLeilist : parsedPleilists) {
+							if (parsedPLeilist.getObjectId().equals(pleilist.getSystem_id())) {
+								relation.remove(parsedPLeilist);
+								currentUser.saveInBackground(new SaveCallback() {
+									
+									@Override
+									public void done(ParseException e) {
+										if (e == null) {
+											listener.onFavoritedRemoved(true, pleilist);
+										}else{
+											listener.onFavoritedRemoved(false, pleilist);
+										}
+										
+									}
+								});
+							}
+						}
+						
+					}
+				}
+			});
+			
+		
+			
+		}
+		}
 
 }

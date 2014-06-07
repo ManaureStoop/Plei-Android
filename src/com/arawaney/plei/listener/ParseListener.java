@@ -23,6 +23,12 @@ public interface ParseListener {
 
 	public void onAllTracksFinished(ArrayList<Track> tracks);
 	
+	public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist);
+
+	public void onFavoritesUpdated(boolean succes);
+
+	public void onFavoritedRemoved(boolean b, Pleilist pleilist);
+	
 
 }
 

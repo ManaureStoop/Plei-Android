@@ -34,6 +34,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.arawaney.plei.MainActivity" />
         </activity>
+        <activity
+            android:name="com.arawaney.plei.activity.TrackActivity"
+            android:label="TrackActivity" >
+        </activity>
 
         <provider
             android:name=".db.PleiProvider"

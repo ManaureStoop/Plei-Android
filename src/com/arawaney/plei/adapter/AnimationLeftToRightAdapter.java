@@ -78,7 +78,7 @@ public class AnimationLeftToRightAdapter extends com.nhaarman.listviewanimations
 	}
 
 	private void setFonts(ViewHolder2 holder) {
-		holder.txt_pleilist_title.setTypeface(FontUtil.getTypeface(contxt, FontUtil.ROBOTO_LIGHT));
+		holder.txt_pleilist_title.setTypeface(FontUtil.getTypeface(contxt, FontUtil.HELVETICA_NEUE_LIGHT));
 	}
 	
 	

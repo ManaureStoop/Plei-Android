@@ -6,10 +6,8 @@ import android.net.ConnectivityManager;
 
 public class FontUtil {
 	
-	public static String ROBOTO_LIGHT = "font/Roboto-Light.ttf";
-	public static String ROBOTO_REGULAR = "font/Roboto-Regular.ttf";
-	public static String ROBOTO_THIN = "font/Roboto-Thin.ttf";
-	public static String ROBOTO_FUTURA= "font/Futura.ttc";
+	public static String HELVETICA_NEUE_LIGHT = "fonts/HelveticaNeue-Light.otf";
+
 	
 	public static Typeface getTypeface(Context context, String template) {
 	     Typeface tf = Typeface.createFromAsset(context.getAssets(),

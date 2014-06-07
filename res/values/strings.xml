@@ -11,5 +11,8 @@
     <string name="main_menu_planes_title">PLANES</string>
     <string name="main_menu_generos_title">GENEROS</string>
     <string name="main_menu_favoritos_title">FAVORITOS</string>
+  
+    <string name="toast_favorited_failed">No se puede guardar como favorito por ahora</string>
+    
 
 </resources>

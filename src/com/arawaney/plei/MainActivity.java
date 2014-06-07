@@ -9,6 +9,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.nfc.cardemulation.OffHostApduService;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,8 +21,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.arawaney.plei.activity.CategoryList;
+import com.arawaney.plei.activity.TrackActivity;
 import com.arawaney.plei.db.provider.CategoryProvider;
 import com.arawaney.plei.db.provider.CoverProvider;
 import com.arawaney.plei.db.provider.PleilistProvider;
@@ -33,17 +36,18 @@ import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
 import com.arawaney.plei.parse.DataUpdater;
 import com.arawaney.plei.parse.ParseProvider;
+import com.arawaney.plei.util.FontUtil;
+import com.parse.ParseUser;
 
 public class MainActivity extends Activity implements ParseListener {
-	
+
 	public final static String TYPE_PLEI_LIST = "Pleilist";
 	public final static String TYPE_CATEGORY = "Category";
-	
-	public final static String TAG_CATEGORY_ID = "categoryId";
-	public final static String TAG_PLEILIST_ID= "pleilistId";
-	
-	private final String LOG_TAG = "Pleilist-MainActivity";
 
+	public final static String TAG_CATEGORY_ID = "categoryId";
+	public final static String TAG_PLEILIST_ID = "pleilistId";
+
+	private final String LOG_TAG = "Pleilist-MainActivity";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +55,12 @@ public class MainActivity extends Activity implements ParseListener {
 		setContentView(R.layout.activity_main);
 
 		ParseProvider.initializeParse(this);
-		
+
+		if (ParseUser.getCurrentUser() == null) {
+			ParseProvider.logIn("manaurestoop@gmail.com", "manaure.stoop!",
+					this, this);
+		}
+
 		setActionBar();
 
 		if (savedInstanceState == null) {
@@ -86,7 +95,10 @@ public class MainActivity extends Activity implements ParseListener {
 	/**
 	 * A placeholder fragment containing a simple view.
 	 */
-	public static class PlaceholderFragment extends Fragment {
+	public static class PlaceholderFragment extends Fragment implements
+			ParseListener {
+
+		LayoutInflater inflater;
 
 		LinearLayout generosList;
 		LinearLayout planesList;
@@ -110,6 +122,7 @@ public class MainActivity extends Activity implements ParseListener {
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
+			this.inflater = inflater;
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
 			loadViews(rootView);
@@ -117,23 +130,35 @@ public class MainActivity extends Activity implements ParseListener {
 			refreshScrollViews(inflater);
 			return rootView;
 		}
-
-		private void refreshScrollViews(LayoutInflater inflater) {
-			refreshDestacadosScrollView(inflater);
-			refreshPlanesScrollView(inflater);
-			refreshGenerosScrollView(inflater);
-			refreshFavoritosScrollView(inflater);
+		
+		@Override
+		public void onResume() {
+		loadCovers();
+		refreshScrollViews(inflater);
+			super.onResume();
 		}
 
-		private void refreshFavoritosScrollView(LayoutInflater inflater) {
-			if (coversFavoritos != null) {
+		private void refreshScrollViews(LayoutInflater inflater) {
+			refreshDestacadosScrollView();
+			refreshPlanesScrollView();
+			refreshGenerosScrollView();
+			refreshFavoritosScrollView();
+		}
 
+		private void refreshFavoritosScrollView() {
+			if (coversFavoritos != null) {
+				favoritosList.removeAllViews();
+				for (Cover cover : coversFavoritos) {
+					View coverView = fillCoverItemInfo(inflater, cover);
+					favoritosList.addView(coverView);
+				}
 			}
 
 		}
 
-		private void refreshPlanesScrollView(LayoutInflater inflater) {
+		private void refreshPlanesScrollView() {
 			if (coversPlanes != null) {
+				planesList.removeAllViews();
 				for (Cover cover : coversPlanes) {
 					View coverView = fillCoverItemInfo(inflater, cover);
 					planesList.addView(coverView);
@@ -142,19 +167,19 @@ public class MainActivity extends Activity implements ParseListener {
 			}
 		}
 
-
-
-		private void refreshGenerosScrollView(LayoutInflater inflater) {
+		private void refreshGenerosScrollView() {
 			if (coversGeneros != null) {
-				for (Cover cover : coversGeneros) {
+				generosList.removeAllViews();
+				for (Cover cover : coversGeneros) {	
 					View coverView = fillCoverItemInfo(inflater, cover);
 					generosList.addView(coverView);
 				}
 			}
 		}
 
-		private void refreshDestacadosScrollView(LayoutInflater inflater) {
+		private void refreshDestacadosScrollView() {
 			if (coversDestacados != null) {
+				destacadosList.removeAllViews();
 				for (Cover cover : coversDestacados) {
 					View coverView = fillCoverItemInfo(inflater, cover);
 					destacadosList.addView(coverView);
@@ -162,13 +187,27 @@ public class MainActivity extends Activity implements ParseListener {
 				}
 			}
 		}
-		
-		private View fillCoverItemInfo(LayoutInflater inflater, final Cover cover) {
+
+		private View fillCoverItemInfo(LayoutInflater inflater,
+				final Cover cover) {
+			View coverView = setCoverViews(inflater, cover);
+			coverView.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					onCoverCLicked(cover);
+				}
+			});
+			return coverView;
+		}
+
+		private View setCoverViews(LayoutInflater inflater, final Cover cover) {
 			View coverView = inflater.inflate(R.layout.cover_item_view, null);
 			ImageView coverImage = (ImageView) coverView
 					.findViewById(R.id.imageView_cover_item);
 			TextView coverTitle = (TextView) coverView
 					.findViewById(R.id.textView_cover_itemt_title);
+			coverTitle.setTypeface(FontUtil.getTypeface(getActivity(), FontUtil.HELVETICA_NEUE_LIGHT));
 			if (cover.getName() != null) {
 				coverTitle.setText(cover.getName().toString());
 			}
@@ -180,20 +219,20 @@ public class MainActivity extends Activity implements ParseListener {
 							.createFromPath(filePath.toString()));
 				}
 			}
-			coverView.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					Log.d("test", "CLick on view" + cover.getName());
-					Intent i = new Intent(getActivity(), CategoryList.class);
-					if (cover.getType().equals(TYPE_CATEGORY)) {
-						i.putExtra(TAG_CATEGORY_ID, cover.getCategoryId());
-						startActivity(i);
-					}
-					
-				}
-			});
 			return coverView;
+		}
+		
+		private void onCoverCLicked(final Cover cover) {
+			Log.d("test", "CLick on view" + cover.getName());
+			if (cover.getType().equals(TYPE_CATEGORY)) {
+				Intent i = new Intent(getActivity(), CategoryList.class);
+				i.putExtra(TAG_CATEGORY_ID, cover.getCategoryId());
+				startActivity(i);
+			}else if (cover.getType().equals(TYPE_PLEI_LIST)){
+				Intent i = new Intent(getActivity(), TrackActivity.class);
+				i.putExtra(MainActivity.TAG_PLEILIST_ID, cover.getPleilistId());
+				startActivity(i);
+			}
 		}
 
 		private void loadCovers() {
@@ -205,9 +244,29 @@ public class MainActivity extends Activity implements ParseListener {
 		}
 
 		private void loadFavoritosCovers() {
-			coversDestacados = CoverProvider.readCoversBySection(getActivity(),
-					SECTION_DESTACADOS);
+			ArrayList<Pleilist> pleilistFavoritos = PleilistProvider
+					.getFavoritesPleiLists(getActivity());
+			if (pleilistFavoritos != null) {
+				coversFavoritos = transforPleilistToCover(pleilistFavoritos);
+			}
 
+		}
+
+		private ArrayList<Cover> transforPleilistToCover(
+				ArrayList<Pleilist> pleilistFavoritos) {
+			ArrayList<Cover> covers = new ArrayList<Cover>();
+			for (Pleilist pleilist : pleilistFavoritos) {
+				Cover cover = new Cover();
+				cover.setSystem_id(pleilist.getSystem_id());
+				cover.setName(pleilist.getName());
+				cover.setImageFile(pleilist.getImage());
+				cover.setPleilistId(pleilist.getSystem_id());
+				cover.setType(TYPE_PLEI_LIST);
+
+				covers.add(cover);
+
+			}
+			return covers;
 		}
 
 		private void loadPlanesCovers() {
@@ -223,9 +282,8 @@ public class MainActivity extends Activity implements ParseListener {
 		}
 
 		private void loadDestacadosCovers() {
-			// coversFavoritos =
-			// CoverProvider.readCoversBySection(getActivity(),
-			// SECTION_FAVORITOS);
+			coversDestacados = CoverProvider.readCoversBySection(getActivity(),
+					SECTION_DESTACADOS);
 
 		}
 
@@ -250,12 +308,63 @@ public class MainActivity extends Activity implements ParseListener {
 
 		}
 
+		@Override
+		public void OnLoginResponse(boolean succes) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onAllCategoriesFinished(ArrayList<Category> categories) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onAllCoversFinished(ArrayList<Cover> covers) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onAllTracksFinished(ArrayList<Track> tracks) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onFavoritesUpdated(boolean b) {
+			refreshFavoritosScrollView();
+		}
+
+		@Override
+		public void onFavoritedRemoved(boolean b, Pleilist pleilist) {
+			// TODO Auto-generated method stub
+			
+		}
+
 	}
 
 	@Override
 	public void OnLoginResponse(boolean succes) {
-		// TODO Auto-generated method stub
-
+		Toast toast = new Toast(this);
+		toast.setDuration(Toast.LENGTH_LONG);
+		if (succes) {
+			Toast.makeText(this, "Login sucessfull", Toast.LENGTH_LONG).show();
+		} else
+			Toast.makeText(this, "Login failed", Toast.LENGTH_LONG).show();
 	}
 
 	@Override
@@ -330,13 +439,13 @@ public class MainActivity extends Activity implements ParseListener {
 		else
 			return false;
 	}
-	
+
 	private void setActionBar() {
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar_main_view);
-		
+
 		ImageView playButton = (ImageView) findViewById(R.id.imageView_actionBar_main_play);
-		
+
 		playButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -347,5 +456,20 @@ public class MainActivity extends Activity implements ParseListener {
 
 	}
 
+	@Override
+	public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
+
+	}
+
+	@Override
+	public void onFavoritesUpdated(boolean b) {
+
+	}
+
+	@Override
+	public void onFavoritedRemoved(boolean b, Pleilist pleilist) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

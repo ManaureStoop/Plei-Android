@@ -13,6 +13,7 @@ static public void UpdateAllData(ParseListener listener, Context context){
 	ParseProvider.updateCovers(context, listener);
 	ParseProvider.updatePleilists(context, listener);
 	ParseProvider.updateTracks(context, listener);
+	ParseProvider.updateFavorites(context, listener);
 
 }
 

@@ -6,7 +6,7 @@
     tools:context="com.arawaney.plei.MainActivity$PlaceholderFragment" >
 
     <View
-        android:id="@+id/imageView2"
+        android:id="@+id/imageView_favorite_button"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/plei_red" />
@@ -41,7 +41,7 @@
     </HorizontalScrollView>
 
     <View
-        android:id="@+id/imageView2"
+        android:id="@+id/imageView_favorite_button"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/plei_yellow" />
@@ -76,7 +76,7 @@
     </HorizontalScrollView>
 
     <View
-        android:id="@+id/imageView2"
+        android:id="@+id/imageView_favorite_button"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/plei_green" />
@@ -112,7 +112,7 @@
     </HorizontalScrollView>
 
     <View
-        android:id="@+id/imageView2"
+        android:id="@+id/imageView_favorite_button"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/plei_blue" />

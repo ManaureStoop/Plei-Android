@@ -12,6 +12,7 @@ import com.arawaney.plei.db.provider.TrackProvider;
 import com.arawaney.plei.model.Category;
 import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
+import com.arawaney.plei.util.FontUtil;
 import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.nhaarman.listviewanimations.swinginadapters.prepared.SwingRightInAnimationAdapter;
 
@@ -64,6 +65,8 @@ public class CategoryList extends Activity {
 		ImageView backButton = (ImageView) findViewById(R.id.imageView_actionBar_back);
 		ImageView playButton = (ImageView) findViewById(R.id.imageView_actionBar_play);
 		TextView categoryTitle = (TextView) findViewById(R.id.textView_actionBar_title);
+		
+		categoryTitle.setTypeface(FontUtil.getTypeface(this, FontUtil.HELVETICA_NEUE_LIGHT));
 
 		categoryTitle.setText(category.getName().toString());
 

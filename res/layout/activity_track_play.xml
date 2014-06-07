@@ -1,0 +1,182 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_plei_logo_player" />
+
+    <TextView
+        android:id="@+id/textView_track_category_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/track_play_margin_top"
+        android:text="Semana no tan Santa"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/grey_title" />
+
+    <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/track_play_padding_top_small"
+        android:background="@color/plei_blue" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/imageView_track_pleilist_image"
+            android:layout_width="fill_parent"
+            android:layout_height="100dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/rumba" />
+
+        <ImageView
+            android:id="@+id/imageView_pleilist_item_transparency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imageView_pleilist_item"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/opacity" />
+
+        <TextView
+            android:id="@+id/textView_track_pleilist_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="38dp"
+            android:text="Cover Titel"
+            android:textColor="@color/white"
+            android:textSize="@dimen/cover_item_title_size" />
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/plei_red" />
+
+    <ImageView
+        android:id="@+id/imageView_favorite_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/track_play_margin_top"
+        android:clickable="true"
+        android:src="@drawable/track_play_like_off" />
+
+    <ProgressBar
+        android:id="@+id/progressBar_track_play"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/track_play_padding_top_large"
+        android:progress="50" />
+
+    <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/track_play_padding_top_small"
+        android:background="@color/plei_blue" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/track_play_time_padding" >
+
+        <TextView
+            android:id="@+id/textView_track_played_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="00 : 	00"
+            android:textColor="@color/plei_blue"
+            android:textSize="@dimen/cover_item_title_size" />
+
+        <TextView
+            android:id="@+id/textView_track_total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:text="00 : 00"
+            android:textColor="@color/plei_red"
+            android:textSize="@dimen/cover_item_title_size" />
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/plei_green" />
+
+    <TextView
+        android:id="@+id/TextView_track_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/track_play_margin_top_2"
+        android:gravity="center"
+        android:text="Judas- Lady go go"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/white" />
+
+    <View
+        android:id="@+id/view_color_tag"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/track_play_padding_top_small"
+        android:background="@color/plei_blue" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/track_play_time_padding" >
+
+            <ImageView
+                android:id="@+id/imageView_track_pauseplay_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:clickable="true"
+                android:src="@drawable/ic_tab_player" />
+
+            <ImageView
+                android:id="@+id/imageView_track_next_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/imageView_track_pauseplay_button"
+                android:layout_marginLeft="38dp"
+                android:layout_toRightOf="@+id/imageView_track_pauseplay_button"
+                android:clickable="true"
+                android:src="@drawable/ic_next_track" />
+
+            <ImageView
+                android:id="@+id/imageView_track_previews_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="38dp"
+                android:layout_toLeftOf="@+id/imageView_track_pauseplay_button"
+                android:clickable="true"
+                android:src="@drawable/ic_previews_track" />
+
+    </RelativeLayout>
+
+</LinearLayout>

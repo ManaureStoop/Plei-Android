@@ -22,6 +22,8 @@ public class TrackProvider {
 
 	public static final Uri URI_TRACK = Uri.parse("content://"
 			+ PleiProvider.PROVIDER_NAME + "/" + TrackEntity.TABLE);
+	public static final Uri URI_PLEILIST_TRACK = Uri.parse("content://"
+			+ PleiProvider.PROVIDER_NAME + "/" + PleilistTrackEntity.TABLE);
 
 	public static long insertTrack(Context context, Track track) {
 
@@ -77,7 +79,7 @@ public class TrackProvider {
 			if (result != null) {
 				long id = Long.parseLong(result.getPathSegments().get(1));
 				if (id > 0) {
-					Log.i(LOG_TAG, " Track :" + track.getName()
+					Log.i(LOG_TAG, " Track :" + track.getName()+" id: " +track.getSystem_id()
 							+ " has bee inserted");
 					return id;
 				} else
@@ -87,7 +89,43 @@ public class TrackProvider {
 			}
 		} catch (Exception e) {
 			Log.e(LOG_TAG, " Track :" + track.getName()
-					+ " has not bee inserted");
+					+ " has not been inserted");
+			e.printStackTrace();
+		}
+		return -1;
+
+	}
+
+	public static long insertPelilistTrack(Context context, String trackId,
+			String pleiListId) {
+
+		if (context == null || trackId == null || pleiListId == null)
+			return -1;
+
+		try {
+			ContentValues values = new ContentValues();
+			values.put(PleilistTrackEntity.COLUMN_TRACK_ID, trackId);
+			values.put(PleilistTrackEntity.COLUMN_PLEILIST_ID, pleiListId);
+
+			final Uri result = context.getContentResolver().insert(
+					URI_PLEILIST_TRACK, values);
+
+			if (result != null) {
+				long id = Long.parseLong(result.getPathSegments().get(1));
+				if (id > 0) {
+					Log.i(LOG_TAG, " Track relation with Pleilist: track "
+							+ trackId + " pleilist " + pleiListId
+							+ " has bee inserted");
+					return id;
+				} else
+					Log.e(LOG_TAG, " Track :" + trackId
+							+ "  relation has not been inserted with: "
+							+ pleiListId);
+
+			}
+		} catch (Exception e) {
+			Log.e(LOG_TAG, " Track :" + trackId
+					+ "  relation has not been inserted with: " + pleiListId);
 			e.printStackTrace();
 		}
 		return -1;
@@ -174,14 +212,17 @@ public class TrackProvider {
 		Track track = null;
 
 		if (cursor.getCount() == 0) {
+			Log.d(LOG_TAG, "PASO 000 "+trackID);
 			cursor.close();
 			return null;
 		}
-
+		Log.d(LOG_TAG, "PASO 111");
 		try {
 			if (cursor.moveToFirst()) {
 
 				do {
+					Log.d(LOG_TAG, "PASO 222 "+trackID);
+
 					final long id = cursor.getLong(cursor
 							.getColumnIndex(TrackEntity.COLUMN_ID));
 					final String system_id = cursor.getString(cursor
@@ -322,13 +363,16 @@ public class TrackProvider {
 		String condition = PleilistTrackEntity.COLUMN_PLEILIST_ID + " = " + "'"
 				+ pleilistId + "'";
 
-		final Cursor cursor = context.getContentResolver().query(URI_TRACK,
-				null, condition, null, null);
+		Log.e(LOG_TAG, "Searching tracks for " + pleilistId);
+
+		final Cursor cursor = context.getContentResolver().query(
+				URI_PLEILIST_TRACK, null, condition, null, null);
 
 		Track track = null;
 
 		if (cursor.getCount() == 0) {
 			cursor.close();
+			Log.e(LOG_TAG, "Error : no tracks found ");
 			return null;
 		}
 
@@ -346,7 +390,8 @@ public class TrackProvider {
 						tracks.add(track);
 
 					} else {
-						Log.d(LOG_TAG, "track is null reading from pleilist: "
+						Log.d(LOG_TAG, "track with ID : " + trackID
+								+ "is null reading from pleilist: "
 								+ pleilistId);
 
 					}
