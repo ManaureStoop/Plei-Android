@@ -77,8 +77,8 @@
         android:layout_marginTop="@dimen/track_play_margin_top"
         android:clickable="true"
         android:src="@drawable/track_play_like_off" />
-
-    <ProgressBar
+    
+    <SeekBar
         android:id="@+id/progressBar_track_play"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
@@ -155,7 +155,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
                 android:clickable="true"
-                android:src="@drawable/ic_tab_player" />
+                android:src="@drawable/ic_now_buffering" />
 
             <ImageView
                 android:id="@+id/imageView_track_next_button"

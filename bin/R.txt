@@ -21,11 +21,11 @@ int drawable blackbckg_trasnparent 0x7f020001
 int drawable ic_back_button 0x7f020002
 int drawable ic_launcher 0x7f020003
 int drawable ic_next_track 0x7f020004
-int drawable ic_now_playing 0x7f020005
-int drawable ic_pause_track 0x7f020006
-int drawable ic_plei_logo_player 0x7f020007
-int drawable ic_previews_track 0x7f020008
-int drawable ic_tab_player 0x7f020009
+int drawable ic_now_buffering 0x7f020005
+int drawable ic_now_playing 0x7f020006
+int drawable ic_pause_track 0x7f020007
+int drawable ic_plei_logo_player 0x7f020008
+int drawable ic_previews_track 0x7f020009
 int drawable nav_bar 0x7f02000a
 int drawable opacity 0x7f02000b
 int drawable rumba 0x7f02000c

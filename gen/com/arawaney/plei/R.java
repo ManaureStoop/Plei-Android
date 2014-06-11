@@ -45,11 +45,11 @@ public final class R {
         public static final int ic_back_button=0x7f020002;
         public static final int ic_launcher=0x7f020003;
         public static final int ic_next_track=0x7f020004;
-        public static final int ic_now_playing=0x7f020005;
-        public static final int ic_pause_track=0x7f020006;
-        public static final int ic_plei_logo_player=0x7f020007;
-        public static final int ic_previews_track=0x7f020008;
-        public static final int ic_tab_player=0x7f020009;
+        public static final int ic_now_buffering=0x7f020005;
+        public static final int ic_now_playing=0x7f020006;
+        public static final int ic_pause_track=0x7f020007;
+        public static final int ic_plei_logo_player=0x7f020008;
+        public static final int ic_previews_track=0x7f020009;
         public static final int nav_bar=0x7f02000a;
         public static final int opacity=0x7f02000b;
         public static final int rumba=0x7f02000c;
