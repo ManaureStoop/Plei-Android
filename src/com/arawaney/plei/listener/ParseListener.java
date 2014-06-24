@@ -28,6 +28,12 @@ public interface ParseListener {
 	public void onFavoritesUpdated(boolean succes);
 
 	public void onFavoritedRemoved(boolean b, Pleilist pleilist);
+
+	public void onImageCoverDownloaded();
+
+	public void onImagePleilistDownloaded();
+
+	public void onAllTracksByPLeilistFinished();
 	
 
 }

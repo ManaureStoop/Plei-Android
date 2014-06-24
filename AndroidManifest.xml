@@ -20,7 +20,9 @@
         <activity
             android:name="com.arawaney.plei.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/Theme.white_style" >
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.white_style"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,14 +32,17 @@
         <activity
             android:name="com.arawaney.plei.activity.CategoryList"
             android:label="CategoryList"
-            android:parentActivityName="com.arawaney.plei.MainActivity" >
+            android:parentActivityName="com.arawaney.plei.MainActivity"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.arawaney.plei.MainActivity" />
         </activity>
         <activity
             android:name="com.arawaney.plei.activity.TrackActivity"
-            android:label="TrackActivity" >
+            android:label="TrackActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop" >
         </activity>
 
         <service

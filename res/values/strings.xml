@@ -7,12 +7,17 @@
     
     
     
-    <string name="main_menu_destacados_title">DESTACADOS</string>
-    <string name="main_menu_planes_title">PLANES</string>
-    <string name="main_menu_generos_title">GENEROS</string>
-    <string name="main_menu_favoritos_title">FAVORITOS</string>
+    <string name="main_menu_destacados_title">FEATURED</string>
+    <string name="main_menu_planes_title">PLANS</string>
+    <string name="main_menu_generos_title">GENDERS</string>
+    <string name="main_menu_favoritos_title">FAVORITES</string>
+    
+    <string name="alert_dialog_stop_player_title">Stop Player?</string>
+    <string name="alert_dialog_stop_player_question">Are you shure you want to stop the Player?</string>
+    <string name="alert_dialog_stop_player_possitive">Stop Player</string>
+    <string name="alert_dialog_stop_player_negative">Cancel</string>
   
-    <string name="toast_favorited_failed">No se puede guardar como favorito por ahora</string>
+    <string name="toast_favorited_failed">It it not possible to add this as favorite right now</string>
     
 
 </resources>

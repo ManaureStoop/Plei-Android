@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Plei</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings!</string>
+    
+    
+    
+    <string name="main_menu_destacados_title">DESTACADOS</string>
+    <string name="main_menu_planes_title">PLANES</string>
+    <string name="main_menu_generos_title">GENEROS</string>
+    <string name="main_menu_favoritos_title">FAVORITOS</string>
+    
+    <string name="alert_dialog_stop_player_title">Parar Plei Player</string>
+    <string name="alert_dialog_stop_player_question">¿Estás seguro que quieres parar la música?</string>
+    <string name="alert_dialog_stop_player_possitive">Parar Player</string>
+    <string name="alert_dialog_stop_player_negative">Cancelar</string>
+  
+    <string name="toast_favorited_failed">No se puede guardar como favorito por ahora</string>
+    
+
+</resources>

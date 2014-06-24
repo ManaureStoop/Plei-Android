@@ -5,11 +5,18 @@ import java.util.ArrayList;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
+import android.app.DownloadManager.Request;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.CursorJoiner.Result;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer.TrackInfo;
 import android.nfc.cardemulation.OffHostApduService;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,10 +43,14 @@ import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
 import com.arawaney.plei.parse.DataUpdater;
 import com.arawaney.plei.parse.ParseProvider;
+import com.arawaney.plei.service.StreamPlayer;
 import com.arawaney.plei.util.FontUtil;
+import com.arawaney.plei.util.ServiceUtil;
+import com.parse.Parse;
 import com.parse.ParseUser;
+import com.parse.RefreshCallback;
 
-public class MainActivity extends Activity implements ParseListener {
+public class MainActivity extends Activity {
 
 	public final static String TYPE_PLEI_LIST = "Pleilist";
 	public final static String TYPE_CATEGORY = "Category";
@@ -49,17 +60,16 @@ public class MainActivity extends Activity implements ParseListener {
 
 	private final String LOG_TAG = "Pleilist-MainActivity";
 
+	static ImageView playButton;
+	
+	static ProgressDialog progressDialog;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		ParseProvider.initializeParse(this);
-
-		if (ParseUser.getCurrentUser() == null) {
-			ParseProvider.logIn("manaurestoop@gmail.com", "manaure.stoop!",
-					this, this);
-		}
+		checkIfCancelPlayerIntent();
 
 		setActionBar();
 
@@ -67,9 +77,43 @@ public class MainActivity extends Activity implements ParseListener {
 			getFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+	}
 
-		DataUpdater.UpdateAllData(this, this);
+	private void checkIfCancelPlayerIntent() {
+		if (getIntent() != null) {
+			if (getIntent().getExtras() != null) {
+				if (getIntent().getExtras().getString(
+						StreamPlayer.TAG_KILL_SERVICE) != null) {
+					if (getIntent().getExtras()
+							.getString(StreamPlayer.TAG_KILL_SERVICE)
+							.equals(StreamPlayer.INTENT_KILL_SERVICE)) {
+						showCancelPlayerAlertDialog();
+					}
+				}
+			}
 
+		}
+	}
+
+	private void showCancelPlayerAlertDialog() {
+		new AlertDialog.Builder(this)
+		.setTitle(getResources().getString(R.string.alert_dialog_stop_player_title))
+		.setMessage(getResources().getString(R.string.alert_dialog_stop_player_question))
+		.setPositiveButton(getResources().getString(R.string.alert_dialog_stop_player_possitive), new DialogInterface.OnClickListener() {
+		    public void onClick(DialogInterface dialog, int which) { 
+				stopService(new Intent(MainActivity.this, StreamPlayer.class));
+					Intent intent = new Intent();
+					intent.setAction(TrackActivity.ACTION_FINISH);
+					sendBroadcast(intent);
+		    }
+		 })
+		.setNegativeButton(getResources().getString(R.string.alert_dialog_stop_player_negative), new DialogInterface.OnClickListener() {
+		    public void onClick(DialogInterface dialog, int which) { 
+		        // do nothing
+		    }
+		 })
+		
+		 .show();
 	}
 
 	@Override
@@ -126,15 +170,40 @@ public class MainActivity extends Activity implements ParseListener {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
 			loadViews(rootView);
-			loadCovers();
-			refreshScrollViews(inflater);
+			
+			refreshUI(inflater);
+
+			checkIfMusicPLaying();
+			
+			connectAndUpdateParse(this);
+
 			return rootView;
 		}
+
+		private void refreshUI(LayoutInflater inflater) {
+			loadCovers();
+			refreshScrollViews(inflater);
+		}
 		
+		private void connectAndUpdateParse(final ParseListener listener) {
+
+			UpdateData updateTask = new UpdateData(getActivity(), listener);
+			updateTask.execute();
+			
+		}
+
+		private void checkIfMusicPLaying() {
+			if (ServiceUtil.isServiceRunning(StreamPlayer.class.getName(),
+					getActivity())) {
+				playButton.setVisibility(View.VISIBLE);
+			} else
+				playButton.setVisibility(View.GONE);
+		}
+
 		@Override
 		public void onResume() {
-		loadCovers();
-		refreshScrollViews(inflater);
+			refreshUI(inflater);
+			checkIfMusicPLaying();
 			super.onResume();
 		}
 
@@ -170,7 +239,7 @@ public class MainActivity extends Activity implements ParseListener {
 		private void refreshGenerosScrollView() {
 			if (coversGeneros != null) {
 				generosList.removeAllViews();
-				for (Cover cover : coversGeneros) {	
+				for (Cover cover : coversGeneros) {
 					View coverView = fillCoverItemInfo(inflater, cover);
 					generosList.addView(coverView);
 				}
@@ -207,7 +276,8 @@ public class MainActivity extends Activity implements ParseListener {
 					.findViewById(R.id.imageView_cover_item);
 			TextView coverTitle = (TextView) coverView
 					.findViewById(R.id.textView_cover_itemt_title);
-			coverTitle.setTypeface(FontUtil.getTypeface(getActivity(), FontUtil.HELVETICA_NEUE_LIGHT));
+			coverTitle.setTypeface(FontUtil.getTypeface(getActivity(),
+					FontUtil.HELVETICA_NEUE_LIGHT));
 			if (cover.getName() != null) {
 				coverTitle.setText(cover.getName().toString());
 			}
@@ -221,16 +291,18 @@ public class MainActivity extends Activity implements ParseListener {
 			}
 			return coverView;
 		}
-		
+
 		private void onCoverCLicked(final Cover cover) {
 			Log.d("test", "CLick on view" + cover.getName());
 			if (cover.getType().equals(TYPE_CATEGORY)) {
 				Intent i = new Intent(getActivity(), CategoryList.class);
 				i.putExtra(TAG_CATEGORY_ID, cover.getCategoryId());
 				startActivity(i);
-			}else if (cover.getType().equals(TYPE_PLEI_LIST)){
+			} else if (cover.getType().equals(TYPE_PLEI_LIST)) {
 				Intent i = new Intent(getActivity(), TrackActivity.class);
 				i.putExtra(MainActivity.TAG_PLEILIST_ID, cover.getPleilistId());
+				i.putExtra(TrackActivity.TAG_CALL_MODE,
+						TrackActivity.MODE_NEW_PLEILIST);
 				startActivity(i);
 			}
 		}
@@ -248,6 +320,9 @@ public class MainActivity extends Activity implements ParseListener {
 					.getFavoritesPleiLists(getActivity());
 			if (pleilistFavoritos != null) {
 				coversFavoritos = transforPleilistToCover(pleilistFavoritos);
+				if (coversFavoritos== null) {
+					Log.d("test1", "favoritos null!!!");
+				}
 			}
 
 		}
@@ -272,18 +347,27 @@ public class MainActivity extends Activity implements ParseListener {
 		private void loadPlanesCovers() {
 			coversPlanes = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_PLANES);
+			if (coversPlanes== null) {
+				Log.d("test1", "planes null!!!");
+			}
 
 		}
 
 		private void loadGenerosCovers() {
 			coversGeneros = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_GENEROS);
+			if (coversGeneros== null) {
+				Log.d("test1", "generos null!!!");
+			}
 
 		}
 
 		private void loadDestacadosCovers() {
 			coversDestacados = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_DESTACADOS);
+			if (coversDestacados== null) {
+				Log.d("test1", "destacados null!!!");
+			}
 
 		}
 
@@ -307,36 +391,96 @@ public class MainActivity extends Activity implements ParseListener {
 			}
 
 		}
-
+		
 		@Override
 		public void OnLoginResponse(boolean succes) {
-			// TODO Auto-generated method stub
-
-		}
+			progressDialog.dismiss();
+			Toast toast = new Toast(getActivity());
+			toast.setDuration(Toast.LENGTH_LONG);
+			if (succes) {
+				Toast.makeText(getActivity(), "Login sucessfull", Toast.LENGTH_LONG).show();
+			} else
+				Toast.makeText(getActivity(), "Login failed", Toast.LENGTH_LONG).show();}
 
 		@Override
 		public void onAllCategoriesFinished(ArrayList<Category> categories) {
-			// TODO Auto-generated method stub
-
+			if (categories != null) {
+				for (Category category : categories) {
+					Category savedCategory = CategoryProvider.readCategory(getActivity(),
+							category.getSystem_id());
+					if (savedCategory != null) {
+						category.setId(savedCategory.getId());
+						CategoryProvider.updateCategory(getActivity(), category);
+					} else {
+						CategoryProvider.insertCategory(getActivity(), category);
+					}
+				}
+				
+				refreshUI(inflater);
+				
+			}
+		//Update Pleilists and Tracks	
+			UpdatePleilist updatePleilist = new UpdatePleilist(getActivity(), this);
+			updatePleilist.execute();
 		}
 
 		@Override
 		public void onAllCoversFinished(ArrayList<Cover> covers) {
-			// TODO Auto-generated method stub
-
+			if (covers != null) {
+				for (Cover cover : covers) {
+					Cover savedCover = CoverProvider.readCover(getActivity(),
+							cover.getSystem_id());
+					if (savedCover != null) {
+						cover.setId(savedCover.getId());
+						CoverProvider.updateCover(getActivity(), cover);
+					} else {
+						CoverProvider.insertCover(getActivity(), cover);
+					}
+				}
+				refreshUI(inflater);
+			}
 		}
 
 		@Override
 		public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
-			// TODO Auto-generated method stub
+			
+			DataUpdater.UpdateFavorites(this, getActivity());
+			
+			if (pleilists != null) {
+				for (Pleilist pleilist : pleilists) {
+					Pleilist savedPleilist = PleilistProvider.readPleilist(getActivity(),
+							pleilist.getSystem_id());
+					if (savedPleilist != null) {
+						pleilist.setId(savedPleilist.getId());
+						pleilist.setFavorite(savedPleilist.getFavorite());
+						PleilistProvider.updatePleilist(getActivity(), pleilist);
+					} else {
+						PleilistProvider.insertPleilist(getActivity(), pleilist);
+					}
+				}
+				refreshUI(inflater);
+			}
 
 		}
 
 		@Override
 		public void onAllTracksFinished(ArrayList<Track> tracks) {
-			// TODO Auto-generated method stub
-
+			if (tracks != null) {
+				for (Track track : tracks) {
+					Track savedTrack = TrackProvider.readTrack(getActivity(),
+							track.getSystem_id());
+					if (savedTrack != null) {
+						track.setId(savedTrack.getId());
+						TrackProvider.updateTrack(getActivity(), track);
+					} else {
+						TrackProvider.insertTrack(getActivity(), track);
+					}
+				}
+				refreshUI(inflater);
+			}
 		}
+
+		
 
 		@Override
 		public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
@@ -346,90 +490,124 @@ public class MainActivity extends Activity implements ParseListener {
 
 		@Override
 		public void onFavoritesUpdated(boolean b) {
-			refreshFavoritosScrollView();
+			refreshUI(inflater);
 		}
 
 		@Override
 		public void onFavoritedRemoved(boolean b, Pleilist pleilist) {
 			// TODO Auto-generated method stub
+
+		}
+		
+		class UpdateData extends AsyncTask<Request, Void, Result> {
+			Context context;
+			ParseListener listener;
+			public UpdateData(Context context, ParseListener listener) {
+			this.context = context;
+			this.listener = listener;
+			}
+			
+			@Override
+			protected void onPreExecute() {
+				progressDialog = new ProgressDialog(context);
+				progressDialog.setTitle("Realizando Login...");
+				super.onPreExecute();
+				
+			}
+
+		    @Override protected Result doInBackground(Request... params) {
+		    	
+		    	ParseProvider.initializeParse(context);
+				
+		    	if (ParseUser.getCurrentUser() == null) {
+					publishProgress();
+					ParseProvider.logIn("manaurestoop@gmail.com", "manaure.stoop!",
+							 context, listener);
+				}
+				
+		    	DataUpdater.UpdateAllData(listener,context);
+		    	
+		    	
+		    	return null;
+		        
+		    }
+		    
+		    @Override
+		    protected void onProgressUpdate(Void... values) {
+		    	super.onProgressUpdate(values);
+		    	progressDialog.show();
+		    }
+
+		    @Override protected void onPostExecute(Result res) {
+		       
+		    }
+		}
+		
+		class UpdatePleilist extends AsyncTask<Request, Void, Result> {
+			Context context;
+			ParseListener listener;
+			public UpdatePleilist(Context context, ParseListener listener) {
+			this.context = context;
+			this.listener = listener;
+			}
+			
+			@Override
+			protected void onPreExecute() {
+				super.onPreExecute();
+			}
+
+		    @Override protected Result doInBackground(Request... params) {
+		    	ParseProvider.updatePleilists(context, listener);
+		    	return null;   
+		    }
+		    
+		    @Override protected void onPostExecute(Result res) {
+		       
+		    }
+		}
+		
+		class UpdateTracks extends AsyncTask<Request, Void, Result> {
+			Context context;
+			ParseListener listener;
+			public UpdateTracks(Context context, ParseListener listener) {
+			this.context = context;
+			this.listener = listener;
+			}
+			
+			@Override
+			protected void onPreExecute() {
+				super.onPreExecute();
+			}
+
+		    @Override protected Result doInBackground(Request... params) {
+		    	ParseProvider.updateTracks(context, listener);
+		    	return null;   
+		    }
+		    
+		    @Override protected void onPostExecute(Result res) {
+		       
+		    }
+		}
+
+
+		@Override
+		public void onImageCoverDownloaded() {
+			refreshUI(inflater);			
+		}
+
+		@Override
+		public void onImagePleilistDownloaded() {
+			// TODO Auto-generated method stub
 			
 		}
 
-	}
-
-	@Override
-	public void OnLoginResponse(boolean succes) {
-		Toast toast = new Toast(this);
-		toast.setDuration(Toast.LENGTH_LONG);
-		if (succes) {
-			Toast.makeText(this, "Login sucessfull", Toast.LENGTH_LONG).show();
-		} else
-			Toast.makeText(this, "Login failed", Toast.LENGTH_LONG).show();
-	}
-
-	@Override
-	public void onAllCategoriesFinished(ArrayList<Category> categories) {
-		if (categories != null) {
-			for (Category category : categories) {
-				Category savedCategory = CategoryProvider.readCategory(this,
-						category.getSystem_id());
-				if (savedCategory != null) {
-					category.setId(savedCategory.getId());
-					CategoryProvider.updateCategory(this, category);
-				} else {
-					CategoryProvider.insertCategory(this, category);
-				}
-			}
+		@Override
+		public void onAllTracksByPLeilistFinished() {
+			// TODO Auto-generated method stub
+			
 		}
-	}
 
-	@Override
-	public void onAllCoversFinished(ArrayList<Cover> covers) {
-		if (covers != null) {
-			for (Cover cover : covers) {
-				Cover savedCover = CoverProvider.readCover(this,
-						cover.getSystem_id());
-				if (savedCover != null) {
-					cover.setId(savedCover.getId());
-					CoverProvider.updateCover(this, cover);
-				} else {
-					CoverProvider.insertCover(this, cover);
-				}
-			}
-		}
-	}
 
-	@Override
-	public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
-		if (pleilists != null) {
-			for (Pleilist pleilist : pleilists) {
-				Pleilist savedPleilist = PleilistProvider.readPleilist(this,
-						pleilist.getSystem_id());
-				if (savedPleilist != null) {
-					pleilist.setId(savedPleilist.getId());
-					pleilist.setFavorite(savedPleilist.getFavorite());
-					PleilistProvider.updatePleilist(this, pleilist);
-				} else {
-					PleilistProvider.insertPleilist(this, pleilist);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void onAllTracksFinished(ArrayList<Track> tracks) {
-		if (tracks != null) {
-			for (Track track : tracks) {
-				Track savedTrack = TrackProvider.readTrack(this,
-						track.getSystem_id());
-				if (savedTrack != null) {
-					track.setId(savedTrack.getId());
-					TrackProvider.updateTrack(this, track);
-				} else {
-					TrackProvider.insertTrack(this, track);
-				}
-			}
-		}
 	}
 
 	protected static boolean imageExists(String imageName, Context context) {
@@ -441,35 +619,48 @@ public class MainActivity extends Activity implements ParseListener {
 	}
 
 	private void setActionBar() {
+		Pleilist pleilist = PleilistProvider.readPleilist(this, "cN40hqDq5k");
+		if (pleilist == null) {
+			Log.d(LOG_TAG, "PLEILIST NULLLLL");
+			
+		}else{
+			Log.d(LOG_TAG, "pleilist: "+pleilist.getName()+pleilist.getSystem_id());
+		}
+		
+		Track track = TrackProvider.readTrack(this, "AX19YCTdHj");
+		if (track == null) {
+			Log.d(LOG_TAG, "Track NULL");
+			
+		}else{
+			Log.d(LOG_TAG, "pleilist: "+track.getName());
+		}
+		String pleilistId = TrackProvider.readTrackRelation(this, "AX19YCTdHj");
+		if (pleilistId == null) {
+			Log.d(LOG_TAG, "pleilistId NULLLLL");
+			
+		}else{
+			Log.d(LOG_TAG, "pleilistId: "+pleilistId);
+
+		}
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar_main_view);
 
-		ImageView playButton = (ImageView) findViewById(R.id.imageView_actionBar_main_play);
+		playButton = (ImageView) findViewById(R.id.imageView_actionBar_main_play);
 
 		playButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-
+				Intent i = new Intent(getApplicationContext(),
+						TrackActivity.class);
+				i.putExtra(TrackActivity.TAG_CALL_MODE,
+						TrackActivity.MODE_OPEN_PLAYING_PLEILIST);
+				startActivity(i);
 			}
 		});
 
 	}
 
-	@Override
-	public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
-
-	}
-
-	@Override
-	public void onFavoritesUpdated(boolean b) {
-
-	}
-
-	@Override
-	public void onFavoritedRemoved(boolean b, Pleilist pleilist) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
+	
 }

@@ -355,6 +355,7 @@ public class CoverProvider {
 
 		try {
 			if (cursor.moveToFirst()) {
+				
 
 				do {		final long id = cursor.getLong(cursor
 						.getColumnIndex(CoverEntity.COLUMN_ID));

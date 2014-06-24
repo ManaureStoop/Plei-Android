@@ -66,21 +66,14 @@ public class TrackProvider {
 						"youtubeUrl is null inserting: " + track.getName());
 			}
 
-			if (track.getOrder() != -1) {
-
-				values.put(TrackEntity.COLUMN_PLEILIST_ORDER, track.getOrder());
-			} else {
-				Log.d(LOG_TAG, "order is null inserting: " + track.getName());
-			}
-
 			final Uri result = context.getContentResolver().insert(URI_TRACK,
 					values);
 
 			if (result != null) {
 				long id = Long.parseLong(result.getPathSegments().get(1));
 				if (id > 0) {
-					Log.i(LOG_TAG, " Track :" + track.getName()+" id: " +track.getSystem_id()
-							+ " has bee inserted");
+					Log.i(LOG_TAG, " Track :" + track.getName() + " id: "
+							+ track.getSystem_id() + " has bee inserted");
 					return id;
 				} else
 					Log.e(LOG_TAG, " Track :" + track.getName()
@@ -97,7 +90,7 @@ public class TrackProvider {
 	}
 
 	public static long insertPelilistTrack(Context context, String trackId,
-			String pleiListId) {
+			String pleiListId, int order) {
 
 		if (context == null || trackId == null || pleiListId == null)
 			return -1;
@@ -106,6 +99,12 @@ public class TrackProvider {
 			ContentValues values = new ContentValues();
 			values.put(PleilistTrackEntity.COLUMN_TRACK_ID, trackId);
 			values.put(PleilistTrackEntity.COLUMN_PLEILIST_ID, pleiListId);
+			if (order != -1) {
+
+				values.put(PleilistTrackEntity.COLUMN_PLEILIST_ORDER, order);
+			} else {
+				Log.d(LOG_TAG, "order is null inserting: " + trackId);
+			}
 
 			final Uri result = context.getContentResolver().insert(
 					URI_PLEILIST_TRACK, values);
@@ -172,13 +171,6 @@ public class TrackProvider {
 						"youtubeUrl is null inserting: " + track.getName());
 			}
 
-			if (track.getOrder() != -1) {
-
-				values.put(TrackEntity.COLUMN_PLEILIST_ORDER, track.getOrder());
-			} else {
-				Log.d(LOG_TAG, "order is null inserting: " + track.getName());
-			}
-
 			String condition = TrackEntity.COLUMN_SYSTEM_ID + " = " + "'"
 					+ String.valueOf(track.getSystem_id()) + "'";
 
@@ -212,16 +204,13 @@ public class TrackProvider {
 		Track track = null;
 
 		if (cursor.getCount() == 0) {
-			Log.d(LOG_TAG, "PASO 000 "+trackID);
 			cursor.close();
 			return null;
 		}
-		Log.d(LOG_TAG, "PASO 111");
 		try {
 			if (cursor.moveToFirst()) {
 
 				do {
-					Log.d(LOG_TAG, "PASO 222 "+trackID);
 
 					final long id = cursor.getLong(cursor
 							.getColumnIndex(TrackEntity.COLUMN_ID));
@@ -237,8 +226,6 @@ public class TrackProvider {
 							.getColumnIndex(TrackEntity.COLUMN_ARTIST));
 					final String youtubeUrl = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_YOUTUBE_URL));
-					final int order = cursor.getInt(cursor
-							.getColumnIndex(TrackEntity.COLUMN_PLEILIST_ORDER));
 
 					Calendar updatedAt = Calendar.getInstance();
 					updatedAt.setTimeInMillis(updated_at);
@@ -259,9 +246,6 @@ public class TrackProvider {
 					}
 					if (youtubeUrl != null) {
 						track.setYoutubeUrl(youtubeUrl);
-					}
-					if (order != -1) {
-						track.setOrder(order);
 					}
 
 				} while (cursor.moveToNext());
@@ -311,8 +295,6 @@ public class TrackProvider {
 							.getColumnIndex(TrackEntity.COLUMN_ARTIST));
 					final String youtubeUrl = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_YOUTUBE_URL));
-					final int order = cursor.getInt(cursor
-							.getColumnIndex(TrackEntity.COLUMN_PLEILIST_ORDER));
 
 					Calendar updatedAt = Calendar.getInstance();
 					updatedAt.setTimeInMillis(updated_at);
@@ -333,9 +315,6 @@ public class TrackProvider {
 					}
 					if (youtubeUrl != null) {
 						track.setYoutubeUrl(youtubeUrl);
-					}
-					if (order != -1) {
-						track.setOrder(order);
 					}
 
 					tracks.add(track);
@@ -366,7 +345,8 @@ public class TrackProvider {
 		Log.e(LOG_TAG, "Searching tracks for " + pleilistId);
 
 		final Cursor cursor = context.getContentResolver().query(
-				URI_PLEILIST_TRACK, null, condition, null, null);
+				URI_PLEILIST_TRACK, null, condition, null,
+				PleilistTrackEntity.COLUMN_PLEILIST_ORDER + " ASC");
 
 		Track track = null;
 
@@ -456,6 +436,67 @@ public class TrackProvider {
 		}
 
 		return null;
+	}
+
+	public static String readTrackRelation(Context context, String trackId) {
+
+		if (context == null)
+			return null;
+
+		String condition = PleilistTrackEntity.COLUMN_TRACK_ID + " = " + "'"
+				+ trackId + "'";
+
+		Log.e(LOG_TAG, "Searching pleilist for " + trackId);
+
+		final Cursor cursor = context.getContentResolver().query(
+				URI_PLEILIST_TRACK, null, condition, null,
+				PleilistTrackEntity.COLUMN_PLEILIST_ORDER + " ASC");
+
+		Track track = null;
+
+		if (cursor.getCount() == 0) {
+			cursor.close();
+			Log.e(LOG_TAG, "Error : no pleilist found ");
+			return null;
+		}
+
+		String pleilistId = null;
+		try {
+			if (cursor.moveToFirst()) {
+
+				do {
+
+					pleilistId = cursor
+							.getString(cursor
+									.getColumnIndex(PleilistTrackEntity.COLUMN_PLEILIST_ID));
+
+				} while (cursor.moveToNext());
+			}
+
+		} catch (Exception e) {
+			pleilistId = null;
+			Log.e(LOG_TAG, "Error : " + e.getMessage());
+		} finally {
+			cursor.close();
+		}
+		return pleilistId;
+	}
+
+	public static Date getLastUpdateByPleilist(Context context,
+			String pleilistId) {
+		Date maximum = null;
+		ArrayList<Track> tracks = readTracksByPleiList(context, pleilistId);
+		if (tracks != null) {
+			maximum = tracks.get(0).getUpdated_at().getTime();
+			for (Track track : tracks) {
+				if (track.getUpdated_at().getTime().after(maximum)) {
+					maximum = track.getUpdated_at().getTime();
+				}
+			}
+
+		}
+		return maximum;
+
 	}
 
 }

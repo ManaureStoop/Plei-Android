@@ -30,6 +30,7 @@
         android:layout_height="0dp"
         android:layout_weight="0.25"
         android:background="@color/plei_red"
+        android:overScrollMode="never"
         android:scrollbars="none" >
 
         <LinearLayout
@@ -64,8 +65,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25"
-        android:background="@color/plei_yellow" 
-        android:scrollbars="none">
+        android:background="@color/plei_yellow"
+        android:overScrollMode="never"
+        android:scrollbars="none" >
 
         <LinearLayout
             android:id="@+id/listView_main_planes"
@@ -100,14 +102,14 @@
         android:layout_height="0dp"
         android:layout_weight="0.25"
         android:background="@color/plei_green"
+        android:overScrollMode="never"
         android:scrollbars="none" >
 
         <LinearLayout
             android:id="@+id/listView_main_generos"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
-            >
+            android:orientation="horizontal" >
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -136,6 +138,7 @@
         android:layout_height="0dp"
         android:layout_weight="0.25"
         android:background="@color/plei_blue"
+        android:overScrollMode="never"
         android:scrollbars="none" >
 
         <LinearLayout
@@ -143,7 +146,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="horizontal" >
-
         </LinearLayout>
     </HorizontalScrollView>
 

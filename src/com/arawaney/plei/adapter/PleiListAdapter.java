@@ -90,6 +90,8 @@ public class PleiListAdapter extends BaseAdapter {
 				Intent i = new Intent(contxt, TrackActivity.class);
 				i.putExtra(MainActivity.TAG_CATEGORY_ID,
 						pleilist.getCategoryId());
+				i.putExtra(TrackActivity.TAG_CALL_MODE,
+						TrackActivity.MODE_NEW_PLEILIST);
 				i.putExtra(MainActivity.TAG_PLEILIST_ID, pleilist.getSystem_id());
 				contxt.startActivity(i);
 

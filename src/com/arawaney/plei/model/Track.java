@@ -10,7 +10,6 @@ public class Track {
 	private Calendar updated_at;
 	private  String url;
 	private  String youtubeUrl;
-	private int order;
 	private  String artist;
 		
 	
@@ -45,13 +44,6 @@ public class Track {
 
 	public void setUpdated_at(Calendar updated_at) {
 		this.updated_at = updated_at;
-	}
-	public int getOrder() {
-		return order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
 	}
 
 	public String getUrl() {

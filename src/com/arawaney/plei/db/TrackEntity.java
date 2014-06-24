@@ -1,7 +1,5 @@
 package com.arawaney.plei.db;
 
-import java.util.Calendar;
-
 public class TrackEntity {
 	public static final String TABLE = "track";
 	public static final String COLUMN_ID = "id";
@@ -11,7 +9,6 @@ public class TrackEntity {
 	public static final String COLUMN_YOUTUBE_URL = "youtubeUrl";
 	public static final String COLUMN_NAME = "name";
 	public static final String COLUMN_UPDATED_AT = "updated_at";
-	public static final String COLUMN_PLEILIST_ORDER = "pleilistOrder";
 	
 
 	public static final int DATABASE_VERSION = 1;
@@ -29,8 +26,6 @@ public class TrackEntity {
 			+ " TEXT, "
 			+ COLUMN_YOUTUBE_URL
 			+ " TEXT, "
-			+ COLUMN_PLEILIST_ORDER 
-			+ " INTEGER, "
 			+ COLUMN_UPDATED_AT 
 			+ " INTEGER, "  
 			+ COLUMN_NAME 

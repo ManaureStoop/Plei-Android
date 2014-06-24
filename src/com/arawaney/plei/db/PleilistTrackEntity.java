@@ -6,6 +6,8 @@ public class PleilistTrackEntity {
 	public static final String COLUMN_ID = "id";
 	public static final String COLUMN_PLEILIST_ID = "pleilist_id";
 	public static final String COLUMN_TRACK_ID = "track_id";
+	public static final String COLUMN_PLEILIST_ORDER = "pleilistOrder";
+
 
 	
 
@@ -19,6 +21,8 @@ public class PleilistTrackEntity {
 			+ " INTEGER PRIMARY KEY AUTOINCREMENT, " 
 			+ COLUMN_PLEILIST_ID
 			+ " TEXT, " 
+			+ COLUMN_PLEILIST_ORDER 
+			+ " INTEGER, "
 			+ COLUMN_TRACK_ID
 			+ " TEXT);";
 }
