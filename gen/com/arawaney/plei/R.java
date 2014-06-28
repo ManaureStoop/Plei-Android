@@ -36,29 +36,33 @@ public final class R {
         public static final int track_play_margin_top_2=0x7f050009;
         public static final int track_play_padding=0x7f050007;
         public static final int track_play_padding_top_large=0x7f050005;
+        public static final int track_play_padding_top_medium=0x7f05000a;
         public static final int track_play_padding_top_small=0x7f050006;
         public static final int track_play_time_padding=0x7f050008;
     }
     public static final class drawable {
         public static final int blackbckg=0x7f020000;
         public static final int blackbckg1=0x7f020001;
-        public static final int blackbckg_trasnparent=0x7f020002;
-        public static final int ic_back_button=0x7f020003;
-        public static final int ic_launcher=0x7f020004;
-        public static final int ic_next_track=0x7f020005;
-        public static final int ic_now_buffering=0x7f020006;
-        public static final int ic_now_playing=0x7f020007;
-        public static final int ic_now_playing2=0x7f020008;
-        public static final int ic_pause_track=0x7f020009;
-        public static final int ic_plei_logo_player=0x7f02000a;
-        public static final int ic_previews_track=0x7f02000b;
-        public static final int ic_stop_player=0x7f02000c;
-        public static final int nav_bar=0x7f02000d;
-        public static final int opacity=0x7f02000e;
-        public static final int rumba=0x7f02000f;
-        public static final int scale=0x7f020010;
-        public static final int track_play_like_off=0x7f020011;
-        public static final int track_play_like_on=0x7f020012;
+        public static final int blackbckg3=0x7f020002;
+        public static final int blackbckg_trasnparent=0x7f020003;
+        public static final int ic_back_button=0x7f020004;
+        public static final int ic_launcher=0x7f020005;
+        public static final int ic_next_track=0x7f020006;
+        public static final int ic_now_buffering=0x7f020007;
+        public static final int ic_now_playing=0x7f020008;
+        public static final int ic_now_playing2=0x7f020009;
+        public static final int ic_pause_track=0x7f02000a;
+        public static final int ic_plei_logo_player=0x7f02000b;
+        public static final int ic_previews_track=0x7f02000c;
+        public static final int ic_stop_player=0x7f02000d;
+        public static final int nav_bar=0x7f02000e;
+        public static final int opacity=0x7f02000f;
+        public static final int ring=0x7f020010;
+        public static final int rumba=0x7f020011;
+        public static final int scale=0x7f020012;
+        public static final int small_ring=0x7f020013;
+        public static final int track_play_like_off=0x7f020014;
+        public static final int track_play_like_on=0x7f020015;
     }
     public static final class id {
         public static final int TextView_track_name=0x7f090010;
@@ -75,10 +79,10 @@ public final class R {
         public static final int imageView_favorite_button=0x7f09000c;
         public static final int imageView_pleilist_item=0x7f09001d;
         public static final int imageView_pleilist_item_transparency=0x7f09000a;
-        public static final int imageView_track_next_button=0x7f090012;
+        public static final int imageView_track_next_button=0x7f090013;
         public static final int imageView_track_pauseplay_button=0x7f090011;
         public static final int imageView_track_pleilist_image=0x7f090009;
-        public static final int imageView_track_previews_button=0x7f090013;
+        public static final int imageView_track_previews_button=0x7f090012;
         public static final int listView_main_destacados=0x7f090019;
         public static final int listView_main_favoritos=0x7f09001c;
         public static final int listView_main_generos=0x7f09001b;

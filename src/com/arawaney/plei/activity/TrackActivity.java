@@ -602,7 +602,7 @@ public class TrackActivity extends Activity implements ParseListener,
 			int minutes = seconds / 60;
 			int secs = seconds - (minutes * 60);
 			DecimalFormat df = new DecimalFormat("#00.###");
-			time = minutes + " : " + df.format(secs);
+			time = minutes + ":" + df.format(secs);
 
 			return time;
 		}
@@ -632,7 +632,7 @@ public class TrackActivity extends Activity implements ParseListener,
 
 	private static void setToBuffering(Context context) {
 		pausePlayButton.setImageDrawable(context.getResources().getDrawable(
-				R.drawable.ic_now_buffering));
+				R.drawable.ring));
 		pausePlayButton.setAnimation(anim);
 		anim.start();
 		mState = State.Retrieving;

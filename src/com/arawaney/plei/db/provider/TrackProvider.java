@@ -218,7 +218,7 @@ public class TrackProvider {
 							.getColumnIndex(TrackEntity.COLUMN_SYSTEM_ID));
 					final String name = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_NAME));
-					final long updated_at = cursor.getInt(cursor
+					final long updated_at = cursor.getLong(cursor
 							.getColumnIndex(TrackEntity.COLUMN_UPDATED_AT));
 					final String url = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_URL));
@@ -287,7 +287,7 @@ public class TrackProvider {
 							.getColumnIndex(TrackEntity.COLUMN_SYSTEM_ID));
 					final String name = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_NAME));
-					final long updated_at = cursor.getInt(cursor
+					final long updated_at = cursor.getLong(cursor
 							.getColumnIndex(TrackEntity.COLUMN_UPDATED_AT));
 					final String url = cursor.getString(cursor
 							.getColumnIndex(TrackEntity.COLUMN_URL));

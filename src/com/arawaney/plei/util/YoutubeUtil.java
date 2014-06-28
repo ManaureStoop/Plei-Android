@@ -83,7 +83,7 @@ public class YoutubeUtil {
 		httpget.setHeader("User-Agent", userAgent);
 
 		try {
-			Log.d("LOG_TAG", "Executing " + getVideoInfoUrl);
+//			Log.d("LOG_TAG", "Executing " + getVideoInfoUrl);
 			HttpResponse response = httpclient.execute(httpget, localContext);
 			HttpEntity entity = response.getEntity();
 			if (entity != null
@@ -138,11 +138,11 @@ public class YoutubeUtil {
 				if (keyValuePairs.length >= 2) {
 					keyValues.put(keyValuePairs[0],
 							URLDecoder.decode(keyValuePairs[1], "UTF-8"));
-					Log.d("LOG_TAG",
-							keyValuePairs[0]
-									+ " : "
-									+ URLDecoder.decode(keyValuePairs[1],
-											"UTF-8"));
+//					Log.d("LOG_TAG",
+//							keyValuePairs[0]
+//									+ " : "
+//									+ URLDecoder.decode(keyValuePairs[1],
+//											"UTF-8"));
 				}
 			}
 		}

@@ -574,7 +574,7 @@ public class StreamPlayer extends Service implements
 
 				String videoId = YoutubeUtil.getYoutubeVideoId(track
 						.getYoutubeUrl());
-				Log.d(LOG_TAG, videoId + " for: " + track.getName());
+//				Log.d(LOG_TAG, videoId + " for: " + track.getName());
 
 				String url = YoutubeUtil
 						.getVideoInfo("http://www.youtube.com/get_video_info?video_id="

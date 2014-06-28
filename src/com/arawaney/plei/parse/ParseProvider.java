@@ -13,6 +13,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.CursorJoiner.Result;
 import android.os.AsyncTask;
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.arawaney.plei.MainActivity;
@@ -28,6 +29,7 @@ import com.arawaney.plei.model.Cover;
 import com.arawaney.plei.model.PelilistTrack;
 import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
+import com.arawaney.plei.util.*;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.GetDataCallback;
@@ -519,7 +521,7 @@ public class ParseProvider {
 		Calendar updateCalendar = Calendar.getInstance();
 
 		updateCalendar.setTimeInMillis(parsedTrack.getUpdatedAt().getTime());
-
+		
 		track.setUpdated_at(updateCalendar);
 
 		return track;
