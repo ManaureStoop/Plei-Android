@@ -12,5 +12,7 @@
     <dimen name="track_play_time_padding">8dp</dimen>
     <dimen name="track_play_margin_top_2">6dp</dimen>
      <dimen name="track_play_padding_top_medium">10dp</dimen>
+     <dimen name="actionbar_margin">5dp</dimen>
+     <dimen name="actionbar_padding">5dp</dimen>
 
 </resources>

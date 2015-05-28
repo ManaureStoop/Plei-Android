@@ -26,6 +26,7 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -77,7 +78,7 @@ public class TrackActivity extends Activity implements ParseListener,
 
 	public static Handler messageHandler;
 
-	ArrayList<Track> tracks;
+	static ArrayList<Track> tracks;
 	static Category category;
 	static Pleilist pleilist;
 	static Track currentTrack;
@@ -101,6 +102,8 @@ public class TrackActivity extends Activity implements ParseListener,
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_track_play);
+		
+		loadViews();
 
 		createMessageHandler();
 
@@ -109,12 +112,15 @@ public class TrackActivity extends Activity implements ParseListener,
 		connectToMediaPlayer();
 
 		setActionBar();
+		
+		loadPleilistImages(this);
 
-		loadViews();
+		setToBuffering(this);
 
 		scaleAnimation();
 
 		loadTitles(this);
+
 		setTrackTitle();
 
 		loadButtons();
@@ -260,16 +266,26 @@ public class TrackActivity extends Activity implements ParseListener,
 	}
 
 	private static void setTrackTitle() {
-		if (currentTrack == null) {
-			trackTitle.setText(" ");
-		} else {
-			if (currentTrack.getName() != null
-					&& currentTrack.getArtist() != null) {
-				String title = currentTrack.getName() + "  -  "
-						+ currentTrack.getArtist();
-				trackTitle.setText(title);
+		if (tracks != null) {
+			if (tracks.size() != 0) {
+				if (currentTrack == null) {
+					trackTitle.setText(" ");
+				} else {
+					if (currentTrack.getName() != null
+							&& currentTrack.getArtist() != null) {
+						String title = currentTrack.getName() + "  -  "
+								+ currentTrack.getArtist();
+						trackTitle.setText(title);
+					}
+				}
+			} else {
+				trackTitle.setText(" ");
 			}
+
+		} else {
+			trackTitle.setText(" ");
 		}
+
 	}
 
 	private void getPleilist() {
@@ -277,10 +293,12 @@ public class TrackActivity extends Activity implements ParseListener,
 				MainActivity.TAG_PLEILIST_ID);
 		if (pleiListId != null) {
 			pleilist = PleilistProvider.readPleilist(this, pleiListId);
+			tracks = TrackProvider.readTracksByPleiList(this, pleiListId);
 			if (pleilist == null) {
 				Log.d(LOG_TAG, "pleilist null : " + pleiListId);
 				finish();
 			}
+
 		} else {
 			Log.d(LOG_TAG, "Pleilist Id null");
 			finish();
@@ -291,8 +309,8 @@ public class TrackActivity extends Activity implements ParseListener,
 	private void setActionBar() {
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar_category_view);
-		ImageView backButton = (ImageView) findViewById(R.id.imageView_actionBar_back);
-		ImageView playButton = (ImageView) findViewById(R.id.imageView_actionBar_play);
+		LinearLayout backButton = (LinearLayout) findViewById(R.id.layout_actionBar_back);
+		LinearLayout playButton = (LinearLayout) findViewById(R.id.layout_actionBar_play);
 		TextView categoryTitle = (TextView) findViewById(R.id.textView_actionBar_title);
 
 		categoryTitle.setVisibility(View.INVISIBLE);
@@ -322,6 +340,7 @@ public class TrackActivity extends Activity implements ParseListener,
 		categoryTitle = (TextView) findViewById(R.id.textView_track_category_name);
 		pleiListTitle = (TextView) findViewById(R.id.textView_track_pleilist_title);
 		trackTitle = (TextView) findViewById(R.id.TextView_track_name);
+
 		playedTime = (TextView) findViewById(R.id.textView_track_played_time);
 		totalTime = (TextView) findViewById(R.id.textView_track_total_time);
 
@@ -336,12 +355,10 @@ public class TrackActivity extends Activity implements ParseListener,
 
 		trackProgress.setProgress(0);
 
-		loadPleilistImages(this);
 
-		setToBuffering(this);
 
 		if (category == null) {
-			categoryTitle.setVisibility(View.GONE);
+			categoryTitle.setVisibility(View.INVISIBLE);
 		}
 
 		trackProgress.setOnSeekBarChangeListener(this);
@@ -383,19 +400,19 @@ public class TrackActivity extends Activity implements ParseListener,
 	}
 
 	@Override
-	public void onAllCategoriesFinished(ArrayList<Category> categories) {
+	public void onAllCategoriesFinished(Boolean b) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onAllCoversFinished(ArrayList<Cover> covers) {
+	public void onAllCoversFinished(Boolean b) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
+	public void onAllPleilistsFinished(Boolean b) {
 		// TODO Auto-generated method stub
 
 	}
@@ -410,6 +427,7 @@ public class TrackActivity extends Activity implements ParseListener,
 	public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
 		if (succes) {
 			PleilistProvider.updatePleilist(this, pleilist);
+			ParseProvider.downloadPleilistCoverImage(pleilist, this, this);
 		} else {
 			pleilist.setFavorite(Pleilist.NOT_FAVORITE);
 			favoriteButton.setImageDrawable(getResources().getDrawable(
@@ -613,6 +631,11 @@ public class TrackActivity extends Activity implements ParseListener,
 				context, listener);
 		loadTracksByPleilist.execute();
 		runService(context);
+		cleanTrackTitle(context);
+	}
+
+	private static void cleanTrackTitle(Context context) {
+		trackTitle.setText(" ");
 	}
 
 	private static void setToPause(Context context) {
@@ -746,6 +769,11 @@ public class TrackActivity extends Activity implements ParseListener,
 		Intent intent = new Intent();
 		intent.setAction(StreamPlayer.ACTION_REFRESH_TRACKS);
 		sendBroadcast(intent);
+	}
+
+	@Override
+	public void onPleilistCoverImageDownloaded(Pleilist pleilist) {
+		getPleilist();
 	}
 
 }

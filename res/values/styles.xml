@@ -17,8 +17,8 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
     
-    <style name="Theme.white_style" parent="@android:style/Theme.Holo.Light.DarkActionBar">
-        <item name="android:actionBarSize">80dp</item>
-</style> 
+<!--     <style name="Theme.white_style" parent="@android:style/Theme.Holo.Light.DarkActionBar"> -->
+<!--         <item name="android:actionBarSize">40dp</item> -->
+<!-- </style>  -->
 
 </resources>

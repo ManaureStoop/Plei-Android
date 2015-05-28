@@ -26,7 +26,7 @@
         android:id="@+id/view_color_tag"
         android:layout_width="match_parent"
         android:layout_height="2dp"
-        android:layout_marginTop="@dimen/track_play_padding_top_small"
+        android:layout_marginTop="@dimen/track_play_padding_top_large"
         android:background="@color/plei_blue" />
 
     <RelativeLayout
@@ -155,7 +155,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:padding="@dimen/track_play_time_padding" >
 
         <ImageView
@@ -165,6 +166,7 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:clickable="true"
+            android:padding="20dp"
             android:src="@drawable/ring" />
 
         <ImageView
@@ -172,9 +174,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginRight="38dp"
             android:layout_toLeftOf="@+id/imageView_track_pauseplay_button"
             android:clickable="true"
+            android:padding="20dp"
             android:src="@drawable/ic_previews_track" />
 
         <ImageView
@@ -182,9 +184,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="37dp"
             android:layout_toRightOf="@+id/imageView_track_pauseplay_button"
             android:clickable="true"
+            android:padding="20dp"
             android:src="@drawable/ic_next_track" />
 
 

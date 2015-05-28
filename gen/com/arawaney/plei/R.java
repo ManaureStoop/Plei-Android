@@ -12,8 +12,9 @@ public final class R {
     }
     public static final class color {
         public static final int black=0x7f040000;
-        public static final int color=0x7f040007;
+        public static final int color=0x7f040008;
         public static final int grey_title=0x7f040006;
+        public static final int plei_black=0x7f040007;
         public static final int plei_blue=0x7f040005;
         public static final int plei_green=0x7f040004;
         public static final int plei_red=0x7f040002;
@@ -21,6 +22,8 @@ public final class R {
         public static final int white=0x7f040001;
     }
     public static final class dimen {
+        public static final int actionbar_margin=0x7f05000b;
+        public static final int actionbar_padding=0x7f05000c;
         /**  Default screen margins, per the Android Design guidelines. 
 
          Example customization of dimensions originally defined in res/values/dimens.xml
@@ -65,38 +68,42 @@ public final class R {
         public static final int track_play_like_on=0x7f020015;
     }
     public static final class id {
-        public static final int TextView_track_name=0x7f090010;
-        public static final int action_settings=0x7f09001f;
-        public static final int container=0x7f090004;
-        public static final int editText1=0x7f090017;
-        public static final int horizontalScrollView1=0x7f090018;
-        public static final int imageView1=0x7f090006;
-        public static final int imageView_actionBar_back=0x7f090000;
-        public static final int imageView_actionBar_main_play=0x7f090003;
-        public static final int imageView_actionBar_play=0x7f090002;
-        public static final int imageView_cover_item=0x7f090014;
-        public static final int imageView_cover_item_transparency=0x7f090015;
-        public static final int imageView_favorite_button=0x7f09000c;
-        public static final int imageView_pleilist_item=0x7f09001d;
-        public static final int imageView_pleilist_item_transparency=0x7f09000a;
-        public static final int imageView_track_next_button=0x7f090013;
-        public static final int imageView_track_pauseplay_button=0x7f090011;
-        public static final int imageView_track_pleilist_image=0x7f090009;
-        public static final int imageView_track_previews_button=0x7f090012;
-        public static final int listView_main_destacados=0x7f090019;
-        public static final int listView_main_favoritos=0x7f09001c;
-        public static final int listView_main_generos=0x7f09001b;
-        public static final int listView_main_planes=0x7f09001a;
-        public static final int listView_plei_list=0x7f090005;
-        public static final int progressBar_track_play=0x7f09000d;
-        public static final int textView_actionBar_title=0x7f090001;
-        public static final int textView_cover_itemt_title=0x7f090016;
-        public static final int textView_pleilist_item_title=0x7f09001e;
-        public static final int textView_track_category_name=0x7f090007;
-        public static final int textView_track_played_time=0x7f09000e;
-        public static final int textView_track_pleilist_title=0x7f09000b;
-        public static final int textView_track_total_time=0x7f09000f;
-        public static final int view_color_tag=0x7f090008;
+        public static final int TextView_track_name=0x7f090014;
+        public static final int action_settings=0x7f090023;
+        public static final int container=0x7f090008;
+        public static final int editText1=0x7f09001b;
+        public static final int horizontalScrollView1=0x7f09001c;
+        public static final int imageView1=0x7f09000a;
+        public static final int imageView_actionBar_back=0x7f090001;
+        public static final int imageView_actionBar_background=0x7f090007;
+        public static final int imageView_actionBar_main_play=0x7f090006;
+        public static final int imageView_actionBar_play=0x7f090003;
+        public static final int imageView_cover_item=0x7f090018;
+        public static final int imageView_cover_item_transparency=0x7f090019;
+        public static final int imageView_favorite_button=0x7f090010;
+        public static final int imageView_pleilist_item=0x7f090021;
+        public static final int imageView_pleilist_item_transparency=0x7f09000e;
+        public static final int imageView_track_next_button=0x7f090017;
+        public static final int imageView_track_pauseplay_button=0x7f090015;
+        public static final int imageView_track_pleilist_image=0x7f09000d;
+        public static final int imageView_track_previews_button=0x7f090016;
+        public static final int layout_actionBar_back=0x7f090000;
+        public static final int layout_actionBar_main_play=0x7f090005;
+        public static final int layout_actionBar_play=0x7f090002;
+        public static final int listView_main_destacados=0x7f09001d;
+        public static final int listView_main_favoritos=0x7f090020;
+        public static final int listView_main_generos=0x7f09001f;
+        public static final int listView_main_planes=0x7f09001e;
+        public static final int listView_plei_list=0x7f090009;
+        public static final int progressBar_track_play=0x7f090011;
+        public static final int textView_actionBar_title=0x7f090004;
+        public static final int textView_cover_itemt_title=0x7f09001a;
+        public static final int textView_pleilist_item_title=0x7f090022;
+        public static final int textView_track_category_name=0x7f09000b;
+        public static final int textView_track_played_time=0x7f090012;
+        public static final int textView_track_pleilist_title=0x7f09000f;
+        public static final int textView_track_total_time=0x7f090013;
+        public static final int view_color_tag=0x7f09000c;
     }
     public static final class layout {
         public static final int actionbar_category_view=0x7f030000;
@@ -154,10 +161,9 @@ public final class R {
         public static final int AppTheme=0x7f070001;
         /**  the theme applied to the application or activity 
          */
-        public static final int CustomActionBarTheme=0x7f070003;
+        public static final int CustomActionBarTheme=0x7f070002;
         /**  ActionBar styles 
          */
-        public static final int MyActionBar=0x7f070004;
-        public static final int Theme_white_style=0x7f070002;
+        public static final int MyActionBar=0x7f070003;
     }
 }

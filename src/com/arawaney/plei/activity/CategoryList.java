@@ -14,6 +14,7 @@ import com.arawaney.plei.model.Category;
 import com.arawaney.plei.model.Cover;
 import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
+import com.arawaney.plei.parse.ParseProvider;
 import com.arawaney.plei.service.StreamPlayer;
 import com.arawaney.plei.util.FontUtil;
 import com.arawaney.plei.util.ServiceUtil;
@@ -33,8 +34,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class CategoryList extends Activity implements ParseListener  {
 
@@ -45,8 +48,8 @@ public class CategoryList extends Activity implements ParseListener  {
 	ArrayList<Pleilist> pleiLists;
 	SwingRightInAnimationAdapter swingAnimationAdapter;
 	Category category;
-	ImageView playButton;
-	
+	LinearLayout playButton;
+	LinearLayout backButton;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -65,13 +68,19 @@ public class CategoryList extends Activity implements ParseListener  {
 		
 		checkIfMusicPLaying();
 	}
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		checkIfMusicPLaying();
+	}
 
 	private void setActionBar() {
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar_category_view);
 
-		ImageView backButton = (ImageView) findViewById(R.id.imageView_actionBar_back);
-		playButton = (ImageView) findViewById(R.id.imageView_actionBar_play);
+		backButton = (LinearLayout) findViewById(R.id.layout_actionBar_back);
+		playButton = (LinearLayout) findViewById(R.id.layout_actionBar_play);
 		TextView categoryTitle = (TextView) findViewById(R.id.textView_actionBar_title);
 		
 		categoryTitle.setTypeface(FontUtil.getTypeface(this, FontUtil.HELVETICA_NEUE_LIGHT));
@@ -79,12 +88,12 @@ public class CategoryList extends Activity implements ParseListener  {
 		categoryTitle.setText(category.getName().toString());
 		
 		playButton.setVisibility(View.INVISIBLE);
-		playButton.setClickable(false);
 
 		backButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
+				
 				finish();
 			}
 		});
@@ -103,14 +112,13 @@ public class CategoryList extends Activity implements ParseListener  {
 
 	}
 	
+	
 	private void checkIfMusicPLaying() {
 		if (ServiceUtil.isServiceRunning(StreamPlayer.class.getName(),
 				this)) {
 			playButton.setVisibility(View.VISIBLE);
-			playButton.setClickable(true);
 		} else
 			playButton.setVisibility(View.INVISIBLE);
-			playButton.setClickable(false);
 	}
 
 	private void getCategory() {
@@ -125,6 +133,7 @@ public class CategoryList extends Activity implements ParseListener  {
 		if (pleiLists != null) {
 			adapter = new PleiListAdapter(this, pleiLists);
 //			swingAnimationAdapter = new SwingRightInAnimationAdapter(adapter);
+//			swingAnimationAdapter.setAbsListView(list);
 			list.setAdapter(adapter);	
 		}
 
@@ -156,19 +165,19 @@ public class CategoryList extends Activity implements ParseListener  {
 	}
 
 	@Override
-	public void onAllCategoriesFinished(ArrayList<Category> categories) {
+	public void onAllCategoriesFinished(Boolean b) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onAllCoversFinished(ArrayList<Cover> covers) {
+	public void onAllCoversFinished(Boolean b) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
+	public void onAllPleilistsFinished(Boolean b) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -181,8 +190,16 @@ public class CategoryList extends Activity implements ParseListener  {
 
 	@Override
 	public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
-		// TODO Auto-generated method stub
-		
+		if (succes) {
+			PleilistProvider.updatePleilist(this, pleilist);
+			ParseProvider.downloadPleilistCoverImage(pleilist, this, this);
+		} else {
+			pleilist.setFavorite(Pleilist.NOT_FAVORITE);
+			Toast.makeText(this,
+					getResources().getString(R.string.toast_favorited_failed),
+					Toast.LENGTH_LONG).show();
+		}
+
 	}
 
 	@Override
@@ -213,6 +230,11 @@ public class CategoryList extends Activity implements ParseListener  {
 
 	@Override
 	public void onAllTracksByPLeilistFinished() {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void onPleilistCoverImageDownloaded(Pleilist pleilist) {
 		// TODO Auto-generated method stub
 		
 	}

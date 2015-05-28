@@ -15,11 +15,11 @@ public interface ParseListener {
 	
 	public void OnLoginResponse(boolean succes);
 
-	public void onAllCategoriesFinished(ArrayList<Category> categories);
+	public void onAllCategoriesFinished(Boolean b);
 
-	public void onAllCoversFinished(ArrayList<Cover> covers);
+	public void onAllCoversFinished(Boolean b);
 
-	public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists);
+	public void onAllPleilistsFinished(Boolean b);
 
 	public void onAllTracksFinished(ArrayList<Track> tracks);
 	
@@ -34,6 +34,8 @@ public interface ParseListener {
 	public void onImagePleilistDownloaded();
 
 	public void onAllTracksByPLeilistFinished();
+
+	public void onPleilistCoverImageDownloaded(Pleilist pleilist);
 	
 
 }

@@ -7,18 +7,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import android.app.Activity;
-import android.app.DownloadManager.Request;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.database.CursorJoiner.Result;
-import android.os.AsyncTask;
-import android.text.format.DateUtils;
 import android.util.Log;
 
-import com.arawaney.plei.MainActivity;
-import com.arawaney.plei.db.PleilistTrackEntity;
-import com.arawaney.plei.db.TrackEntity;
 import com.arawaney.plei.db.provider.CategoryProvider;
 import com.arawaney.plei.db.provider.CoverProvider;
 import com.arawaney.plei.db.provider.PleilistProvider;
@@ -26,10 +17,8 @@ import com.arawaney.plei.db.provider.TrackProvider;
 import com.arawaney.plei.listener.ParseListener;
 import com.arawaney.plei.model.Category;
 import com.arawaney.plei.model.Cover;
-import com.arawaney.plei.model.PelilistTrack;
 import com.arawaney.plei.model.Pleilist;
 import com.arawaney.plei.model.Track;
-import com.arawaney.plei.util.*;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.GetDataCallback;
@@ -104,7 +93,7 @@ public class ParseProvider {
 
 	}
 
-	public static void updateCategories(Context context,
+	public static void updateCategories(final Context context,
 			final ParseListener listener) {
 		Date updateAt = CategoryProvider.getLastUpdate(context);
 
@@ -128,7 +117,14 @@ public class ParseProvider {
 						categories.add(category);
 					}
 
-					listener.onAllCategoriesFinished(categories);
+					if (categories != null) {
+						if (categories.size() > 0) {
+							insertCategories(context, categories);
+							listener.onAllCategoriesFinished(true);
+						} else
+							listener.onAllCategoriesFinished(false);
+					} else
+						listener.onAllCategoriesFinished(false);
 
 				} else {
 					listener.onAllCategoriesFinished(null);
@@ -217,14 +213,22 @@ public class ParseProvider {
 													Log.d(LOG_TAG,
 															"Error dowloading image for cover :"
 																	+ cover.getName());
+													Log.d(LOG_TAG,
+															e.getMessage());
 												}
 											}
 										});
 							}
 						}
 					}
-
-					listener.onAllCoversFinished(covers);
+					if (covers != null) {
+						if (covers.size() > 0) {
+							insertCovers(context, covers);
+							listener.onAllCoversFinished(true);
+						} else
+							listener.onAllCoversFinished(false);
+					} else
+						listener.onAllCoversFinished(false);
 
 				} else {
 					listener.onAllCoversFinished(null);
@@ -335,7 +339,7 @@ public class ParseProvider {
 																		+ " from : "
 																		+ pleilist
 																				.getName());
-														listener.onImagePleilistDownloaded();
+														// listener.onImagePleilistDownloaded();
 
 													} catch (Exception error) {
 														Log.d(LOG_TAG,
@@ -354,9 +358,18 @@ public class ParseProvider {
 										});
 							}
 						}
+
 					}
 
-					listener.onAllPleilistsFinished(pleilists);
+					DataUpdater.UpdateFavorites(listener, context);
+					if (pleilists != null) {
+						if (pleilists.size() > 0) {
+							insertPleilists(context, pleilists);
+							listener.onAllPleilistsFinished(true);
+						} else
+							listener.onAllPleilistsFinished(false);
+					} else
+						listener.onAllPleilistsFinished(false);
 
 				} else {
 					listener.onAllPleilistsFinished(null);
@@ -383,10 +396,7 @@ public class ParseProvider {
 		if (parsedPleilist.getParseFile(IMAGE_TAG) != null) {
 			pleilist.setImage(parsedPleilist.getParseFile(IMAGE_TAG).getName());
 		}
-		if (parsedPleilist.getParseFile(COVER_IMAGE_TAG) != null) {
-			pleilist.setCoverImage(parsedPleilist.getParseFile(COVER_IMAGE_TAG)
-					.getName());
-		}
+
 		if (parsedPleilist.getBoolean(DELETED_TAG) == true) {
 			pleilist.setDeleted(Pleilist.DELETED);
 		} else {
@@ -463,6 +473,58 @@ public class ParseProvider {
 		}
 	}
 
+	private static void insertPleilists(final Context context,
+			ArrayList<Pleilist> pleilists) {
+
+		if (pleilists != null) {
+			for (Pleilist pleilist : pleilists) {
+				Pleilist savedPleilist = PleilistProvider.readPleilist(context,
+						pleilist.getSystem_id());
+				if (savedPleilist != null) {
+					pleilist.setId(savedPleilist.getId());
+					pleilist.setFavorite(savedPleilist.getFavorite());
+					PleilistProvider.updatePleilist(context, pleilist);
+				} else {
+					PleilistProvider.insertPleilist(context, pleilist);
+				}
+			}
+		}
+
+	}
+
+	private static void insertCovers(final Context context,
+			ArrayList<Cover> covers) {
+		if (covers != null) {
+			for (Cover cover : covers) {
+				Cover savedCover = CoverProvider.readCover(context,
+						cover.getSystem_id());
+				if (savedCover != null) {
+					cover.setId(savedCover.getId());
+					CoverProvider.updateCover(context, cover);
+				} else {
+					CoverProvider.insertCover(context, cover);
+				}
+			}
+		}
+	}
+
+	private static void insertCategories(final Context context,
+			ArrayList<Category> categories) {
+		if (categories != null) {
+			for (Category category : categories) {
+				Category savedCategory = CategoryProvider.readCategory(context,
+						category.getSystem_id());
+				if (savedCategory != null) {
+					category.setId(savedCategory.getId());
+					CategoryProvider.updateCategory(context, category);
+				} else {
+					CategoryProvider.insertCategory(context, category);
+				}
+			}
+		}
+
+	}
+
 	public static void updateTracks(final Context context,
 			final ParseListener listener) {
 
@@ -521,7 +583,7 @@ public class ParseProvider {
 		Calendar updateCalendar = Calendar.getInstance();
 
 		updateCalendar.setTimeInMillis(parsedTrack.getUpdatedAt().getTime());
-		
+
 		track.setUpdated_at(updateCalendar);
 
 		return track;
@@ -572,6 +634,86 @@ public class ParseProvider {
 
 	}
 
+	public static void downloadPleilistCoverImage(final Pleilist pleilist,
+			final Context context, final ParseListener listener) {
+
+		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+				PLEILIST_CLASS);
+		query.getInBackground(pleilist.getSystem_id(),
+				new GetCallback<ParseObject>() {
+					public void done(ParseObject parsedPleilist,
+							ParseException e) {
+						if (e == null) {
+							if (parsedPleilist.getParseFile(COVER_IMAGE_TAG) != null) {
+								pleilist.setCoverImage(parsedPleilist
+										.getParseFile(COVER_IMAGE_TAG)
+										.getName());
+							} else {
+								Log.d(LOG_TAG, "Pleilist Cover image for :"
+										+ pleilist.getName() + " not found!");
+							}
+
+							if (pleilist.getCoverImage() != null) {
+								if (!imageExists(pleilist.getCoverImage(),
+										context)) {
+									ParseFile applicantResume = (ParseFile) parsedPleilist
+											.get(COVER_IMAGE_TAG);
+									applicantResume
+											.getDataInBackground(new GetDataCallback() {
+												public void done(byte[] image,
+														ParseException e) {
+													if (e == null) {
+														FileOutputStream outputStream;
+
+														try {
+															outputStream = context
+																	.openFileOutput(
+																			pleilist.getCoverImage(),
+																			Context.MODE_PRIVATE);
+															outputStream
+																	.write(image);
+															outputStream
+																	.close();
+															Log.d(LOG_TAG,
+																	"CoverImage : "
+																			+ pleilist
+																					.getImage()
+																			+ " from : "
+																			+ pleilist
+																					.getName());
+															
+															PleilistProvider.updatePleilist(context, pleilist);
+														
+															listener.onPleilistCoverImageDownloaded(pleilist);
+
+														} catch (Exception error) {
+															Log.d(LOG_TAG,
+																	"Error loading cover image for"
+																			+ pleilist
+																					.getName());
+															error.printStackTrace();
+														}
+													} else {
+														Log.d(LOG_TAG,
+																"Error dowloading image for pleilist :"
+																		+ pleilist
+																				.getName());
+													}
+												}
+											});
+								}
+							}
+
+						} else {
+							Log.d(LOG_TAG,
+									"Pleilist :" + pleilist.getSystem_id()
+											+ " not found!");
+						}
+					}
+				});
+
+	}
+
 	public static void updateFavorites(final Context context,
 			final ParseListener listener) {
 
@@ -612,6 +754,7 @@ public class ParseProvider {
 										pleilist.setFavorite(Pleilist.FAVORITE);
 										PleilistProvider.updatePleilist(
 												context, pleilist);
+										downloadPleilistCoverImage(pleilist, context, listener);
 									}
 								}
 
@@ -701,8 +844,7 @@ public class ParseProvider {
 
 	public static void updateTracksByPleilist(final Context context,
 			final ParseListener listener, final String pleilistId) {
-		
-	
+
 		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
 				PLEILIST_CLASS);
 
@@ -714,41 +856,40 @@ public class ParseProvider {
 				if (e == null) {
 					ParseRelation<ParseObject> relation = parsedPleilist
 							.getRelation(TRACKS_TAG);
-					Date updateAt = TrackProvider.getLastUpdateByPleilist(context, pleilistId);
+					Date updateAt = TrackProvider.getLastUpdateByPleilist(
+							context, pleilistId);
 					ParseQuery<ParseObject> query = relation.getQuery();
 					if (updateAt != null) {
 						query.whereGreaterThan(UPDATED_AT_TAG, updateAt);
 					}
-					query.findInBackground(
-							new FindCallback<ParseObject>() {
-								public void done(
-										List<ParseObject> parsedTracks,
-										ParseException e) {
-									if (e != null) {
-										Log.d(LOG_TAG,
-												"No tracks found for pleilist : "
-														+ parsedPleilist
-																.getString(NAME_TAG));
-										e.printStackTrace();
+					query.findInBackground(new FindCallback<ParseObject>() {
+						public void done(List<ParseObject> parsedTracks,
+								ParseException e) {
+							if (e != null) {
+								Log.d(LOG_TAG,
+										"No tracks found for pleilist : "
+												+ parsedPleilist
+														.getString(NAME_TAG));
+								e.printStackTrace();
 
-									} else {
-										if (parsedTracks.size()>0) {
-											for (ParseObject parsedTrack : parsedTracks) {
-												Track track = readTrackFromCursor(
-														parsedTrack, context);
-												track.setSystem_id(parsedTrack
-														.getObjectId());
+							} else {
+								if (parsedTracks.size() > 0) {
+									for (ParseObject parsedTrack : parsedTracks) {
+										Track track = readTrackFromCursor(
+												parsedTrack, context);
+										track.setSystem_id(parsedTrack
+												.getObjectId());
 
-												insertTrack(context, pleilistId,
-														parsedTrack, track);
-											}
-											listener.onAllTracksByPLeilistFinished();
-										}
-										
+										insertTrack(context, pleilistId,
+												parsedTrack, track);
 									}
+									listener.onAllTracksByPLeilistFinished();
 								}
 
-							});
+							}
+						}
+
+					});
 				} else {
 					Log.d(LOG_TAG, "No  pleilist found for  : " + pleilistId);
 				}

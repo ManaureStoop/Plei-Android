@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.app.DownloadManager.Request;
@@ -60,9 +61,10 @@ public class MainActivity extends Activity {
 
 	private final String LOG_TAG = "Pleilist-MainActivity";
 
-	static ImageView playButton;
-	
+	static LinearLayout playButton;
+
 	static ProgressDialog progressDialog;
+	public AlertDialog.Builder builder;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +81,20 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	@Override
+	protected void onResume() {
+		checkIfCancelPlayerIntent();
+		super.onResume();
+	}
+	
+	@Override
+	protected void onDestroy() {
+		killMediaPlayerService();
+		super.onDestroy();
+	}
+	
+	
+
 	private void checkIfCancelPlayerIntent() {
 		if (getIntent() != null) {
 			if (getIntent().getExtras() != null) {
@@ -88,6 +104,7 @@ public class MainActivity extends Activity {
 							.getString(StreamPlayer.TAG_KILL_SERVICE)
 							.equals(StreamPlayer.INTENT_KILL_SERVICE)) {
 						showCancelPlayerAlertDialog();
+						getIntent().removeExtra(StreamPlayer.TAG_KILL_SERVICE);
 					}
 				}
 			}
@@ -96,24 +113,53 @@ public class MainActivity extends Activity {
 	}
 
 	private void showCancelPlayerAlertDialog() {
-		new AlertDialog.Builder(this)
-		.setTitle(getResources().getString(R.string.alert_dialog_stop_player_title))
-		.setMessage(getResources().getString(R.string.alert_dialog_stop_player_question))
-		.setPositiveButton(getResources().getString(R.string.alert_dialog_stop_player_possitive), new DialogInterface.OnClickListener() {
-		    public void onClick(DialogInterface dialog, int which) { 
-				stopService(new Intent(MainActivity.this, StreamPlayer.class));
-					Intent intent = new Intent();
-					intent.setAction(TrackActivity.ACTION_FINISH);
-					sendBroadcast(intent);
-		    }
-		 })
-		.setNegativeButton(getResources().getString(R.string.alert_dialog_stop_player_negative), new DialogInterface.OnClickListener() {
-		    public void onClick(DialogInterface dialog, int which) { 
-		        // do nothing
-		    }
-		 })
-		
-		 .show();
+		if (builder == null) {
+			builder = new Builder(this);
+			// new AlertDialog.Builder(this)
+			builder.setTitle(
+					getResources().getString(
+							R.string.alert_dialog_stop_player_title))
+					.setMessage(
+							getResources().getString(
+									R.string.alert_dialog_stop_player_question))
+					.setPositiveButton(
+							getResources()
+									.getString(
+											R.string.alert_dialog_stop_player_possitive),
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int which) {
+									killMediaPlayerService();
+									builder = null;
+
+								}
+
+								
+							})
+					.setNegativeButton(
+							getResources().getString(
+									R.string.alert_dialog_stop_player_negative),
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int which) {
+									// do nothing
+									builder = null;
+								}
+							})
+
+					.show();
+
+		}
+
+	}
+	
+	private void killMediaPlayerService() {
+		stopService(new Intent(MainActivity.this,
+				StreamPlayer.class));
+		Intent intent = new Intent();
+		intent.setAction(TrackActivity.ACTION_FINISH);
+		sendBroadcast(intent);
+		playButton.setVisibility(View.INVISIBLE);
 	}
 
 	@Override
@@ -170,11 +216,11 @@ public class MainActivity extends Activity {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
 			loadViews(rootView);
-			
+
 			refreshUI(inflater);
 
 			checkIfMusicPLaying();
-			
+
 			connectAndUpdateParse(this);
 
 			return rootView;
@@ -184,12 +230,12 @@ public class MainActivity extends Activity {
 			loadCovers();
 			refreshScrollViews(inflater);
 		}
-		
+
 		private void connectAndUpdateParse(final ParseListener listener) {
 
 			UpdateData updateTask = new UpdateData(getActivity(), listener);
 			updateTask.execute();
-			
+
 		}
 
 		private void checkIfMusicPLaying() {
@@ -288,6 +334,8 @@ public class MainActivity extends Activity {
 					coverImage.setImageDrawable(Drawable
 							.createFromPath(filePath.toString()));
 				}
+			}else{
+				Log.d("Error loading Image", "Irmage NULL with cover : "+ cover.getName());
 			}
 			return coverView;
 		}
@@ -320,7 +368,7 @@ public class MainActivity extends Activity {
 					.getFavoritesPleiLists(getActivity());
 			if (pleilistFavoritos != null) {
 				coversFavoritos = transforPleilistToCover(pleilistFavoritos);
-				if (coversFavoritos== null) {
+				if (coversFavoritos == null) {
 					Log.d("test1", "favoritos null!!!");
 				}
 			}
@@ -329,12 +377,22 @@ public class MainActivity extends Activity {
 
 		private ArrayList<Cover> transforPleilistToCover(
 				ArrayList<Pleilist> pleilistFavoritos) {
+			
 			ArrayList<Cover> covers = new ArrayList<Cover>();
+			
 			for (Pleilist pleilist : pleilistFavoritos) {
+				
 				Cover cover = new Cover();
 				cover.setSystem_id(pleilist.getSystem_id());
 				cover.setName(pleilist.getName());
-				cover.setImageFile(pleilist.getImage());
+				
+				if (pleilist.getCoverImage() != null) {
+					cover.setImageFile(pleilist.getCoverImage());
+
+				} else {
+					cover.setImageFile(pleilist.getImage());
+
+				}
 				cover.setPleilistId(pleilist.getSystem_id());
 				cover.setType(TYPE_PLEI_LIST);
 
@@ -347,7 +405,7 @@ public class MainActivity extends Activity {
 		private void loadPlanesCovers() {
 			coversPlanes = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_PLANES);
-			if (coversPlanes== null) {
+			if (coversPlanes == null) {
 				Log.d("test1", "planes null!!!");
 			}
 
@@ -356,7 +414,7 @@ public class MainActivity extends Activity {
 		private void loadGenerosCovers() {
 			coversGeneros = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_GENEROS);
-			if (coversGeneros== null) {
+			if (coversGeneros == null) {
 				Log.d("test1", "generos null!!!");
 			}
 
@@ -365,7 +423,7 @@ public class MainActivity extends Activity {
 		private void loadDestacadosCovers() {
 			coversDestacados = CoverProvider.readCoversBySection(getActivity(),
 					SECTION_DESTACADOS);
-			if (coversDestacados== null) {
+			if (coversDestacados == null) {
 				Log.d("test1", "destacados null!!!");
 			}
 
@@ -391,73 +449,45 @@ public class MainActivity extends Activity {
 			}
 
 		}
-		
+
 		@Override
 		public void OnLoginResponse(boolean succes) {
 			progressDialog.dismiss();
 			Toast toast = new Toast(getActivity());
 			toast.setDuration(Toast.LENGTH_LONG);
 			if (succes) {
-				Toast.makeText(getActivity(), "Login sucessfull", Toast.LENGTH_LONG).show();
+				Toast.makeText(getActivity(), "Login sucessfull",
+						Toast.LENGTH_LONG).show();
 			} else
-				Toast.makeText(getActivity(), "Login failed", Toast.LENGTH_LONG).show();}
+				Toast.makeText(getActivity(), "Login failed", Toast.LENGTH_LONG)
+						.show();
+		}
 
 		@Override
-		public void onAllCategoriesFinished(ArrayList<Category> categories) {
-			if (categories != null) {
-				for (Category category : categories) {
-					Category savedCategory = CategoryProvider.readCategory(getActivity(),
-							category.getSystem_id());
-					if (savedCategory != null) {
-						category.setId(savedCategory.getId());
-						CategoryProvider.updateCategory(getActivity(), category);
-					} else {
-						CategoryProvider.insertCategory(getActivity(), category);
-					}
-				}
-				
+		public void onAllCategoriesFinished(Boolean b) {
+			if (b) {
+
 				refreshUI(inflater);
-				
+
 			}
-		//Update Pleilists and Tracks	
-			UpdatePleilist updatePleilist = new UpdatePleilist(getActivity(), this);
+			// Update Pleilists and Tracks
+			UpdatePleilist updatePleilist = new UpdatePleilist(getActivity(),
+					this);
 			updatePleilist.execute();
 		}
 
 		@Override
-		public void onAllCoversFinished(ArrayList<Cover> covers) {
-			if (covers != null) {
-				for (Cover cover : covers) {
-					Cover savedCover = CoverProvider.readCover(getActivity(),
-							cover.getSystem_id());
-					if (savedCover != null) {
-						cover.setId(savedCover.getId());
-						CoverProvider.updateCover(getActivity(), cover);
-					} else {
-						CoverProvider.insertCover(getActivity(), cover);
-					}
-				}
+		public void onAllCoversFinished(Boolean b) {
+			if (b) {
+
 				refreshUI(inflater);
 			}
 		}
 
 		@Override
-		public void onAllPleilistsFinished(ArrayList<Pleilist> pleilists) {
-			
-			DataUpdater.UpdateFavorites(this, getActivity());
-			
-			if (pleilists != null) {
-				for (Pleilist pleilist : pleilists) {
-					Pleilist savedPleilist = PleilistProvider.readPleilist(getActivity(),
-							pleilist.getSystem_id());
-					if (savedPleilist != null) {
-						pleilist.setId(savedPleilist.getId());
-						pleilist.setFavorite(savedPleilist.getFavorite());
-						PleilistProvider.updatePleilist(getActivity(), pleilist);
-					} else {
-						PleilistProvider.insertPleilist(getActivity(), pleilist);
-					}
-				}
+		public void onAllPleilistsFinished(Boolean b) {
+
+			if (b) {
 				refreshUI(inflater);
 			}
 
@@ -480,11 +510,17 @@ public class MainActivity extends Activity {
 			}
 		}
 
-		
-
 		@Override
 		public void onSavedFAvoriteDone(boolean succes, Pleilist pleilist) {
-			// TODO Auto-generated method stub
+			if (succes) {
+				PleilistProvider.updatePleilist(getActivity(), pleilist);
+				ParseProvider.downloadPleilistCoverImage(pleilist, getActivity(), this);
+			} else {
+				pleilist.setFavorite(Pleilist.NOT_FAVORITE);
+				Toast.makeText(getActivity(),
+						getResources().getString(R.string.toast_favorited_failed),
+						Toast.LENGTH_LONG).show();
+			}
 
 		}
 
@@ -498,115 +534,127 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated method stub
 
 		}
-		
+
 		class UpdateData extends AsyncTask<Request, Void, Result> {
 			Context context;
 			ParseListener listener;
+
 			public UpdateData(Context context, ParseListener listener) {
-			this.context = context;
-			this.listener = listener;
+				this.context = context;
+				this.listener = listener;
 			}
-			
+
 			@Override
 			protected void onPreExecute() {
 				progressDialog = new ProgressDialog(context);
 				progressDialog.setTitle("Realizando Login...");
 				super.onPreExecute();
-				
+
 			}
 
-		    @Override protected Result doInBackground(Request... params) {
-		    	
-		    	ParseProvider.initializeParse(context);
-				
-		    	if (ParseUser.getCurrentUser() == null) {
-					publishProgress();
-					ParseProvider.logIn("manaurestoop@gmail.com", "manaure.stoop!",
-							 context, listener);
-				}
-				
-		    	DataUpdater.UpdateAllData(listener,context);
-		    	
-		    	
-		    	return null;
-		        
-		    }
-		    
-		    @Override
-		    protected void onProgressUpdate(Void... values) {
-		    	super.onProgressUpdate(values);
-		    	progressDialog.show();
-		    }
+			@Override
+			protected Result doInBackground(Request... params) {
 
-		    @Override protected void onPostExecute(Result res) {
-		       
-		    }
+				ParseProvider.initializeParse(context);
+
+				if (ParseUser.getCurrentUser() == null) {
+					publishProgress();
+					ParseProvider.logIn("manaurestoop@gmail.com",
+							"manaure.stoop!", context, listener);
+				}
+
+				DataUpdater.UpdateAllData(listener, context);
+
+				return null;
+
+			}
+
+			@Override
+			protected void onProgressUpdate(Void... values) {
+				super.onProgressUpdate(values);
+				progressDialog.show();
+			}
+
+			@Override
+			protected void onPostExecute(Result res) {
+
+			}
 		}
-		
+
 		class UpdatePleilist extends AsyncTask<Request, Void, Result> {
 			Context context;
 			ParseListener listener;
+
 			public UpdatePleilist(Context context, ParseListener listener) {
-			this.context = context;
-			this.listener = listener;
+				this.context = context;
+				this.listener = listener;
 			}
-			
+
 			@Override
 			protected void onPreExecute() {
 				super.onPreExecute();
 			}
 
-		    @Override protected Result doInBackground(Request... params) {
-		    	ParseProvider.updatePleilists(context, listener);
-		    	return null;   
-		    }
-		    
-		    @Override protected void onPostExecute(Result res) {
-		       
-		    }
+			@Override
+			protected Result doInBackground(Request... params) {
+				ParseProvider.updatePleilists(context, listener);
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Result res) {
+
+			}
 		}
-		
+
 		class UpdateTracks extends AsyncTask<Request, Void, Result> {
 			Context context;
 			ParseListener listener;
+
 			public UpdateTracks(Context context, ParseListener listener) {
-			this.context = context;
-			this.listener = listener;
+				this.context = context;
+				this.listener = listener;
 			}
-			
+
 			@Override
 			protected void onPreExecute() {
 				super.onPreExecute();
 			}
 
-		    @Override protected Result doInBackground(Request... params) {
-		    	ParseProvider.updateTracks(context, listener);
-		    	return null;   
-		    }
-		    
-		    @Override protected void onPostExecute(Result res) {
-		       
-		    }
-		}
+			@Override
+			protected Result doInBackground(Request... params) {
+				ParseProvider.updateTracks(context, listener);
+				return null;
+			}
 
+			@Override
+			protected void onPostExecute(Result res) {
+
+			}
+		}
 
 		@Override
 		public void onImageCoverDownloaded() {
-			refreshUI(inflater);			
+			refreshUI(inflater);
 		}
 
 		@Override
 		public void onImagePleilistDownloaded() {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void onAllTracksByPLeilistFinished() {
 			// TODO Auto-generated method stub
-			
+
 		}
 
+		@Override
+		public void onPleilistCoverImageDownloaded(Pleilist pleilist) {
+			loadCovers();
+			refreshUI(inflater);
+		}
 
 	}
 
@@ -619,33 +667,11 @@ public class MainActivity extends Activity {
 	}
 
 	private void setActionBar() {
-		Pleilist pleilist = PleilistProvider.readPleilist(this, "cN40hqDq5k");
-		if (pleilist == null) {
-			Log.d(LOG_TAG, "PLEILIST NULLLLL");
-			
-		}else{
-			Log.d(LOG_TAG, "pleilist: "+pleilist.getName()+pleilist.getSystem_id());
-		}
-		
-		Track track = TrackProvider.readTrack(this, "AX19YCTdHj");
-		if (track == null) {
-			Log.d(LOG_TAG, "Track NULL");
-			
-		}else{
-			Log.d(LOG_TAG, "pleilist: "+track.getName());
-		}
-		String pleilistId = TrackProvider.readTrackRelation(this, "AX19YCTdHj");
-		if (pleilistId == null) {
-			Log.d(LOG_TAG, "pleilistId NULLLLL");
-			
-		}else{
-			Log.d(LOG_TAG, "pleilistId: "+pleilistId);
 
-		}
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar_main_view);
 
-		playButton = (ImageView) findViewById(R.id.imageView_actionBar_main_play);
+		playButton = (LinearLayout) findViewById(R.id.layout_actionBar_main_play);
 
 		playButton.setOnClickListener(new OnClickListener() {
 
@@ -661,6 +687,4 @@ public class MainActivity extends Activity {
 
 	}
 
-	
-	
 }

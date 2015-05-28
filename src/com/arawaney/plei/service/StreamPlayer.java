@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.database.CursorJoiner.Result;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnErrorListener;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.AsyncTask;
@@ -75,6 +76,7 @@ public class StreamPlayer extends Service implements
 
 	public static final String PLAY_DIRECTION_BACKWARD = "backward";
 	public static final String PLAY_DIRECTION_FORWARD = "forward";
+	private static final int STREAM_PLAYER_BUFFER_OFFSET = 15;
 
 	private static StreamPlayer mInstance = null;
 
@@ -82,6 +84,7 @@ public class StreamPlayer extends Service implements
 	private int mBufferPosition;
 
 	ArrayList<Track> tracks;
+
 	Track currentTrack;
 	int indexOfTrack;
 	String pleilistId;
@@ -92,6 +95,8 @@ public class StreamPlayer extends Service implements
 
 	MediaPlayerListener listener;
 	private Messenger messageHandler;
+
+	private WifiLock wifiLock;
 
 	// indicates the state our service:
 	enum State {
@@ -106,7 +111,7 @@ public class StreamPlayer extends Service implements
 					// focus back)
 		Paused,
 		// playback paused (media player ready!)
-		WaitingBuffer // Waiting for 25% of load
+		WaitingBuffer // Waiting for 15% of load
 	};
 
 	State mState = State.Retrieving;
@@ -150,15 +155,33 @@ public class StreamPlayer extends Service implements
 
 	private void readTracks() {
 		tracks = TrackProvider.readTracksByPleiList(this, pleilistId);
+		// Asegurar que todos los url estén en null
+		if (tracks != null) {
+			for (Track track : tracks) {
+				track.setUrl(null);
+			}
+		}
+
 	}
 
-	private void startMediaPlayer() {
-		
-		DownloadYoutubeUrls downloadYoutubeUrls = new DownloadYoutubeUrls(this, true);
-		downloadYoutubeUrls.execute();
+	private Track getNextSongWithoutYoutubeUrl() {
+		if (tracks != null) {
+			for (Track track : tracks) {
+				if (track.getUrl() == null) {
+					Log.d(LOG_TAG, "Next track is: " + track.getName());
+					return track;
 
+				}
+			}
+			return null;
+		}
+		return null;
+	};
+
+	private void startMediaPlayer() {
 		currentTrack = tracks.get(0);
 		indexOfTrack = 0;
+
 		configureMediaPlayer(PLAY_DIRECTION_FORWARD);
 	}
 
@@ -196,14 +219,19 @@ public class StreamPlayer extends Service implements
 				sendMessage(MESSAGE_MODE_PLEILIST_ID);
 			} else if (action.equals(ACTION_REFRESH_TRACKS)) {
 				readTracks();
-				
+
 				if (tracks != null) {
 					if (mMediaPlayer == null) {
 						startMediaPlayer();
 					} else {
-						DownloadYoutubeUrls downloadYoutubeUrls = new DownloadYoutubeUrls(
-								getApplicationContext(), false);
-						downloadYoutubeUrls.execute();
+						if (currentTrack.getUrl() == null) {
+							DownloadYoutubeUrls downloadYoutubeUrls = new DownloadYoutubeUrls(
+									getApplicationContext(), false,
+									currentTrack);
+							downloadYoutubeUrls.execute();
+						} else {
+							youtubeUrlsReady = true;
+						}
 					}
 				}
 			}
@@ -212,6 +240,14 @@ public class StreamPlayer extends Service implements
 	};
 
 	private void configureMediaPlayer(String playDirection) {
+
+		if (currentTrack.getUrl() == null) {
+			DownloadYoutubeUrls downloadYoutubeUrls = new DownloadYoutubeUrls(
+					this, true, currentTrack);
+			downloadYoutubeUrls.execute();
+		} else {
+			youtubeUrlsReady = true;
+		}
 
 		mMediaPlayer = new MediaPlayer(); // initialize it here
 		mMediaPlayer.setOnPreparedListener(this);
@@ -225,6 +261,7 @@ public class StreamPlayer extends Service implements
 
 	private void initMediaPlayer(String playDirection) {
 		if (youtubeUrlsReady) {
+			youtubeUrlsReady = false;
 
 			if (currentTrack.getUrl() != null) {
 				try {
@@ -283,11 +320,66 @@ public class StreamPlayer extends Service implements
 	public void onPrepared(MediaPlayer player) {
 		sendMessage(MESSAGE_MODE_SONG_READY);
 		mState = State.WaitingBuffer;
+
+		getNextUrl();
+	}
+
+	private void getNextUrl() {
+
+		Track nextTrackWithoutUrl = getNextSongWithoutYoutubeUrl();
+
+		if (nextTrackWithoutUrl != null) {
+			DownloadYoutubeUrls downloadYoutubeUrls = new DownloadYoutubeUrls(
+					getApplicationContext(), false, nextTrackWithoutUrl);
+			downloadYoutubeUrls.execute();
+		} else {
+			Log.d(LOG_TAG, "All songs have their URL's ");
+		}
+
 	}
 
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
-		// TODO Auto-generated method stub
+		switch (what) {
+		case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+			Log.e(LOG_TAG,
+					"Media server died. In this case, the application must release the  MediaPlayer object and instantiate a new one.");
+			break;
+		case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+			Log.e(LOG_TAG, "Media player Error:Unspecified media player error.");
+			break;
+
+		default:
+			break;
+		}
+		switch (extra) {
+		case MediaPlayer.MEDIA_ERROR_IO:
+			Log.e(LOG_TAG,
+					"Media player Error: File or network related operation errors ");
+			break;
+		case MediaPlayer.MEDIA_ERROR_MALFORMED:
+			Log.e(LOG_TAG,
+					"Media player Error: Bitstream is not conforming to the related coding standard or file spec. ");
+			break;
+		case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+			Log.e(LOG_TAG,
+					"The video is streamed and its container is not valid for progressive playback i.e the video's index (e.g moov atom) is not at the start of thefile. ");
+			break;
+
+		case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+			Log.e(LOG_TAG,
+					"Media player Error: Some operation takes too long to complete, usually more than 3-5 seconds ");
+			break;
+
+		case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+			Log.e(LOG_TAG,
+					"Media player Error: Bitstream is conforming to the related coding standard or file spec, but the media framework does not support the feature ");
+			break;
+
+		default:
+			break;
+		}
+		playNextSong();
 		return false;
 	}
 
@@ -295,6 +387,10 @@ public class StreamPlayer extends Service implements
 	public void onDestroy() {
 		if (mMediaPlayer != null) {
 			mMediaPlayer.release();
+		}
+
+		if (wifiLock != null) {
+			wifiLock.release();
 		}
 
 		unregisterReceiver(receiver);
@@ -307,7 +403,7 @@ public class StreamPlayer extends Service implements
 		setBufferPosition(percent * getMusicDuration() / 100);
 
 		sendMessage(MESSAGE_MODE_REFRESH_SEEKBAR);
-		if (percent >= 25 && waitingForBuffer()) {
+		if (percent >= STREAM_PLAYER_BUFFER_OFFSET && waitingForBuffer()) {
 			startMusic();
 		}
 	}
@@ -337,7 +433,7 @@ public class StreamPlayer extends Service implements
 	}
 
 	private void startNewSong(String playDirection) {
-		
+
 		currentTrack = tracks.get(indexOfTrack);
 		sendMessage(MESSAGE_MODE_MUSIC_ENDED);
 		mMediaPlayer.release();
@@ -449,7 +545,8 @@ public class StreamPlayer extends Service implements
 
 		Intent contentIntent = new Intent(getApplicationContext(),
 				TrackActivity.class);
-		contentIntent.putExtra(TrackActivity.TAG_CALL_MODE,TrackActivity.MODE_OPEN_PLAYING_PLEILIST);
+		contentIntent.putExtra(TrackActivity.TAG_CALL_MODE,
+				TrackActivity.MODE_OPEN_PLAYING_PLEILIST);
 		contentIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 
 		PendingIntent pContentIntent = PendingIntent.getActivity(
@@ -544,10 +641,8 @@ public class StreamPlayer extends Service implements
 	private void lockDevice() {
 		mMediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK); //
 		// Setting wakelock to be active when devices goes to sleep
-		mMediaPlayer.setOnPreparedListener(this);
-		WifiLock wifiLock = ((WifiManager) this
-				.getSystemService(Context.WIFI_SERVICE)).createWifiLock(
-				WifiManager.WIFI_MODE_FULL, "mylock");
+		wifiLock = ((WifiManager) this.getSystemService(Context.WIFI_SERVICE))
+				.createWifiLock(WifiManager.WIFI_MODE_FULL, "mylock");
 
 		wifiLock.acquire();
 	}
@@ -555,9 +650,13 @@ public class StreamPlayer extends Service implements
 	class DownloadYoutubeUrls extends AsyncTask<Request, Void, Result> {
 		Context context;
 		boolean initializeNeeded;
-		public DownloadYoutubeUrls(Context context, boolean initializeNeeded) {
+		Track track;
+
+		public DownloadYoutubeUrls(Context context, boolean initializeNeeded,
+				Track track) {
 			this.context = context;
 			this.initializeNeeded = initializeNeeded;
+			this.track = track;
 		}
 
 		@Override
@@ -570,28 +669,40 @@ public class StreamPlayer extends Service implements
 		@Override
 		protected Result doInBackground(Request... params) {
 
-			for (Track track : tracks) {
+			String videoId = YoutubeUtil.getYoutubeVideoId(track
+					.getYoutubeUrl());
 
-				String videoId = YoutubeUtil.getYoutubeVideoId(track
-						.getYoutubeUrl());
-//				Log.d(LOG_TAG, videoId + " for: " + track.getName());
+			String url = YoutubeUtil
+					.getVideoInfo("http://www.youtube.com/get_video_info?video_id="
+							+ videoId + "&el=v&ps=default&eurl=&gl=US&hl=en");
+			if (url == null) {
+				Log.d(LOG_TAG, "URL NULL for: " + track.getName());
 
-				String url = YoutubeUtil
-						.getVideoInfo("http://www.youtube.com/get_video_info?video_id="
-								+ videoId
-								+ "&el=v&ps=default&eurl=&gl=US&hl=en");
-				if (url == null) {
-					Log.d(LOG_TAG, "URL NULL for: " + track.getName());
-				} else
-					Log.d(LOG_TAG, "URL : " + url + " for: " + track.getName());
+				int index = tracks.indexOf(track);
+				Log.d(LOG_TAG, "Index of track is :" + index);
+				tracks.remove(index);
+
+				if (initializeNeeded) {
+					playNextSong();
+				} else {
+					getNextUrl();
+				}
+
+			} else {
+				Log.d(LOG_TAG, "URL : " + url + " for: " + track.getName());
 
 				track.setUrl(url);
 
-			}
+				int index = tracks.indexOf(track);
+				Log.d(LOG_TAG, "Index of track is :" + index);
+				tracks.get(index).setUrl(url);
 
-			if (initializeNeeded) {
-				youtubeUrlsReady = true;
-				initMediaPlayer(PLAY_DIRECTION_FORWARD);
+				if (initializeNeeded) {
+					youtubeUrlsReady = true;
+					initMediaPlayer(PLAY_DIRECTION_FORWARD);
+				} else {
+					getNextUrl();
+				}
 			}
 
 			return null;
